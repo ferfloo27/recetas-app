@@ -1,11 +1,8 @@
 // screens/SecondScreen.js
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-
-import { FlatList } from "react-native-gesture-handler";
 import { useRoute } from "@react-navigation/native";
 
 export default function DetalleView() {
@@ -23,10 +20,9 @@ export default function DetalleView() {
           `https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${API_KEY}&includeNutrition=false`
         );
         setRecipe(response.data);
-        setIngredientes(response.data.extendedIngredients);
+        setIngredientes(response.data.extendedIngredients || []);
       } catch (error) {
-        console.error("Error translating text:", error);
-        console.error("Error fetching recipes:", error);
+        console.error("Error fetching recipe details:", error);
       }
     };
 
@@ -35,19 +31,11 @@ export default function DetalleView() {
 
   return (
     <View style={styles.container}>
-      {/* Barra de búsqueda */}
-      <View style={styles.searchContainer}>
-        <Text style={styles.searchInput}>Buscar</Text>
-        <FontAwesome
-          name="search"
-          size={20}
-          color="gray"
-          style={styles.searchIcon}
-        />
-      </View>
+      
 
       {/* Contenido principal */}
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Título y favorito */}
         <Text style={styles.title}>{recipe?.title}</Text>
         <FontAwesome
           name="heart-o"
@@ -56,31 +44,28 @@ export default function DetalleView() {
           style={styles.favoriteIcon}
         />
 
+        {/* Imagen */}
         <Image
-          source={{ uri: `${recipe?.image}` }} // Cambia a la URL de tu imagen
+          source={{ uri: `${recipe?.image}` }}
           style={styles.recipeImage}
         />
 
-        {/* Sección de ingredientes */}
+        {/* Ingredientes */}
         <Text style={styles.sectionTitle}>Ingredientes:</Text>
-        <View style={styles.ingredientItem}>
-          <FlatList
-            data={ingredientes}
-            renderItem={({ item }) => (
-              <View style={styles.ingredientContainer}>
-                <Text style={styles.ingredientText}>{item.original}</Text>
-                <FontAwesome name="external-link" size={18} color="#EF5B23" />
-              </View>
-            )}
-            keyExtractor={(item) => item.id.toString()}
-          />
-        </View>
+        {ingredientes.map((item) => (
+          <View key={item.id} style={styles.ingredientContainer}>
+            <Text style={styles.ingredientText}>{item.original}</Text>
+            <FontAwesome name="external-link" size={18} color="#EF5B23" />
+          </View>
+        ))}
 
-        {/* Sección de resumen */}
-        <Text style={styles.sectionTitle}>Resumen</Text>
-        <Text style={styles.summaryText}>{recipe?.summary}</Text>
+        {/* Resumen */}
+        <Text style={styles.sectionTitle}>Resumen:</Text>
+        <Text style={styles.summaryText}>
+          {recipe?.summary?.replace(/<[^>]+>/g, "") || "No disponible."}
+        </Text>
 
-        {/* Sección de preparación */}
+        {/* Preparación */}
         <Text style={styles.sectionTitle}>Preparación:</Text>
         <Text style={styles.preparationText}>
           En una sartén ponemos el aceite de oliva y dejamos que caliente un
@@ -113,7 +98,7 @@ const styles = StyleSheet.create({
     color: "gray",
   },
   searchIcon: {
-    marginLeft: -30,
+    marginLeft: 10,
   },
   content: {
     paddingHorizontal: 16,
@@ -143,11 +128,6 @@ const styles = StyleSheet.create({
     color: "#EF5B23",
     marginVertical: 10,
   },
-  ingredientItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
   ingredientText: {
     flex: 1,
     fontSize: 16,
@@ -156,6 +136,12 @@ const styles = StyleSheet.create({
   ingredientContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 5,
+  },
+  summaryText: {
+    fontSize: 16,
+    color: "black",
+    marginBottom: 20,
   },
   preparationText: {
     fontSize: 16,
