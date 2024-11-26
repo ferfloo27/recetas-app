@@ -7,62 +7,121 @@ import {
   StyleSheet,
   Pressable,
 } from "react-native";
-import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
+import { auth, db } from "../../firebase-config";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { MaterialIcons } from "@expo/vector-icons"; // Importa el ícono de Ionicons
 import BottomNav from "./BottomNav";
 
 const Favoritos = () => {
-  const [randomRecipes, setRandomRecipes] = useState([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
   const [error, setError] = useState(null);
   const navigation = useNavigation();
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
 
-  useEffect(() => {
-    fetchRandomRecipes();
-  }, []);
+  // Método para obtener las recetas favoritas de Firestore
+  const fetchFavoritesForUser = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setError("No hay un usuario logueado");
+      return;
+    }
 
-  const fetchRandomRecipes = async () => {
+    const userId = user.uid;
+    const favoritesCollectionRef = collection(db, "users", userId, "favorites");
+
     try {
-      const response = await axios.get(
-        `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=10&language=es`
-      );
-      setRandomRecipes(response.data.recipes);
-      setError(null);
+      const querySnapshot = await getDocs(favoritesCollectionRef);
+      const favoritesData = querySnapshot.docs
+        .map((doc) => ({
+          id: doc.id, // ID del documento (receta)
+          ...doc.data(), // Información adicional de la receta
+        }))
+        .filter((recipe) => recipe.id && recipe.title); // Filtra recetas incompletas
+
+      console.log("Recetas favoritas:", favoritesData);
+      setFavoriteRecipes(favoritesData); // Actualiza el estado con las recetas válidas
     } catch (error) {
-      console.error("Error fetching random recipes:", error);
-      setError("No se pudieron cargar las recetas. Inténtalo nuevamente.");
+      console.error("Error al cargar favoritos:", error);
+      setError("No se pudieron cargar las recetas favoritas.");
     }
   };
 
+  // Método para eliminar una receta de los favoritos
+  const toggleFavorite = async (recipeId) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userId = user.uid;
+    const recipeDocRef = doc(db, "users", userId, "favorites", recipeId);
+
+    try {
+      // Eliminar receta de Firestore
+      await deleteDoc(recipeDocRef);
+
+      // Actualizar la lista local de favoritos eliminando la receta
+      setFavoriteRecipes((prevFavorites) =>
+        prevFavorites.filter((id) => id !== recipeId)
+      );
+      fetchFavoritesForUser();
+    } catch (error) {
+      console.error("Error al eliminar favorito:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavoritesForUser(); // Llama a la función cuando el componente se monte
+  }, []);
+
   return (
     <View style={styles.container}>
-        
-      
       {error && <Text style={styles.errorText}>{error}</Text>}
-      <FlatList
-        data={randomRecipes}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() =>
-              navigation.navigate("Detalle de la Receta", { recipeId: item.id })
-            }
-            style={styles.recipeItem}
-            accessibilityLabel={`Ver detalles de ${item.title}`}
-          >
-            <Image
-              source={{ uri: item.image || "https://via.placeholder.com/80" }}
-              style={styles.recipeImage}
-            />
-            <Text style={styles.recipeTitle}>
-              {item.title || "Título no disponible"}
-            </Text>
-          </Pressable>
-        )}
-        initialNumToRender={5}
-        windowSize={10}
+
+      <Text style={styles.title}>Tus recetas favoritas:</Text>
+
+      {favoriteRecipes.length === 0 ? (
+        <Text style={styles.noFavoritesText}>
+          No tienes recetas favoritas guardadas.
+        </Text>
+      ) : (
+        <FlatList
+          data={favoriteRecipes} // Las recetas favoritas ya filtradas
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Pressable
+              style={styles.recipeItem}
+              onPress={() =>
+                navigation.navigate("Detalle de la Receta", {
+                  recipeId: item.id,
+                })
+              }
+            >
+              <Image
+                source={{ uri: item.image || "https://via.placeholder.com/80" }}
+                style={styles.recipeImage}
+              />
+
+              <Text style={styles.recipeTitle}>{item.title}</Text>
+              <Pressable
+                onPress={() => toggleFavorite(item.id.toString())} // Elimina el favorito
+              >
+                <MaterialIcons
+                  name="favorite" // Corazón lleno
+                  size={24}
+                  color="#EF5B23" // Color del icono (puedes cambiarlo)
+                />
+              </Pressable>
+            </Pressable>
+          )}
+          initialNumToRender={5}
+          windowSize={10}
+        />
+      )}
+
+      <BottomNav
+        style={styles.bottomNav}
+        navigation={navigation}
+        activeScreen="Favoritos"
       />
-      <BottomNav style={styles.bottomNav} navigation={navigation} activeScreen="Favoritos" />
     </View>
   );
 };
@@ -71,7 +130,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    
     paddingHorizontal: 16,
   },
   title: {
@@ -80,6 +138,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
     color: "#EF5B23",
+  },
+  noFavoritesText: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 20,
   },
   errorText: {
     color: "red",
@@ -95,6 +159,11 @@ const styles = StyleSheet.create({
     elevation: 3,
     padding: 10,
   },
+  recipePressable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
   recipeImage: {
     width: 80,
     height: 80,
@@ -106,7 +175,9 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "#333",
   },
-  
+  favoriteIcon: {
+    padding: 8,
+  },
 });
 
 export default Favoritos;
