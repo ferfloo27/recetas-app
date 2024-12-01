@@ -8,6 +8,9 @@ import Buscador from "./src/components/Buscador";
 import Home from "./src/components/Home";
 import Login from "./src/components/Login";
 import Favoritos from "./src/components/Favoritos";
+import MenuScreen from "./src/components/MenuScreen";
+import MealDetail from "./src/components/MealDetail";
+import DetalleIngrediente from "./src/components/DetalleIngrediente";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -50,6 +53,17 @@ export default function App() {
           }}
         />
         <Stack.Screen
+          name="Detalle del ingrediente"
+          component={DetalleIngrediente}
+          options={{
+            title: "Detalle del ingrediente",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+          }}
+        />
+
+        <Stack.Screen
           name="Home"
           component={Home}
           options={({ navigation }) => ({
@@ -88,6 +102,27 @@ export default function App() {
               </Pressable>
             ),
           })}
+        />
+
+        <Stack.Screen
+          name="MenuScreen"
+          component={MenuScreen}
+          options={{
+            title: "Menu",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+          }}
+        />
+        <Stack.Screen
+          name="MealDetail"
+          component={MealDetail}
+          options={{
+            title: "Detalle del Menu",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>

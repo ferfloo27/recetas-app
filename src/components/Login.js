@@ -11,7 +11,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "../../firebase-config";
+import { doc, setDoc, collection } from "firebase/firestore"; // Importamos Firestore
+import { auth, db } from "../../firebase-config"; // Importamos configuración de Firebase
 import { useNavigation } from "@react-navigation/native";
 
 const Login = () => {
@@ -19,7 +20,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Por favor, complete todos los campos.");
       return;
@@ -30,18 +31,39 @@ const Login = () => {
       return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log("Cuenta creada con el correo:", user.email);
-        Alert.alert("Cuenta creada", `¡Bienvenido, ${user.email}!`);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log("Error al crear la cuenta:", errorMessage);
-        handleAuthError(errorCode);
+    try {
+      // Crear el usuario en Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      // Crear el documento del usuario en Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
+        email: email,
+        createdAt: new Date(),
       });
+
+      // Crear la subcolección `dailyMenu` con un documento inicial
+      const dailyMenuRef = collection(db, "users", user.uid, "dailyMenu");
+      /*await setDoc(doc(dailyMenuRef, new Date().toISOString()), {
+        fecha: new Date().toISOString(),
+        comidas: {
+          desayuno: [],
+          almuerzo: [],
+          cena: [],
+        },
+      });*/
+
+      Alert.alert("Cuenta creada", `¡Bienvenido, ${user.email}!`);
+      console.log("Cuenta creada con el correo:", user.email);
+    } catch (error) {
+      console.log("Error al crear la cuenta:", error.message);
+      handleAuthError(error.code);
+    }
   };
 
   const handleLogin = () => {
@@ -58,10 +80,8 @@ const Login = () => {
         navigation.navigate("Home");
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log("Error al iniciar sesión:", errorMessage);
-        handleAuthError(errorCode);
+        console.log("Error al iniciar sesión:", error.message);
+        handleAuthError(error.code);
       });
   };
 

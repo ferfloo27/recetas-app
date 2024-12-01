@@ -1,42 +1,54 @@
 // components/BottomNav.js
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function BottomNav({ navigation, activeScreen }) {
   return (
     <View style={styles.bottomNav}>
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => navigation.navigate("Home")}
       >
-        <FontAwesome name="home" size={28} color={activeScreen === 'Home' ? "#EF5B23" : "#FFFF"} />
+        <FontAwesome
+          name="home"
+          size={28}
+          color={activeScreen === "Home" ? "#EF5B23" : "#FFFF"}
+        />
         <Text style={styles.navText}>Inicio</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigation.navigate('Favoritos')}
+        onPress={() => navigation.navigate("Favoritos")}
       >
-        <FontAwesome name="heart" size={24} color={activeScreen === 'Favoritos' ? "#EF5B23" : "#FFFF"} />
+        <FontAwesome
+          name="heart"
+          size={24}
+          color={activeScreen === "Favoritos" ? "#EF5B23" : "#FFFF"}
+        />
         <Text style={styles.navText}>Favoritos</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigation.navigate('MenuScreen')}
+        onPress={() => navigation.navigate("MenuScreen")}
       >
-        <FontAwesome name="book" size={24} color="#FFFF" />
+        <FontAwesome
+          name="book"
+          size={24}
+          color={activeScreen === "MenuScreen" ? "#EF5B23" : "#FFFF"}
+        />
         <Text style={styles.navText}>Menú</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigation.navigate('CategoriesScreen')}
+        onPress={() => navigation.navigate("CategoriesScreen")}
       >
         <FontAwesome name="cutlery" size={24} color="#FFFF" />
         <Text style={styles.navText}>Categorías</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigation.navigate('AndiRatingScreen')}
+        onPress={() => navigation.navigate("AndiRatingScreen")}
       >
         <FontAwesome name="star" size={24} color="#FFFF" />
         <Text style={styles.navText}>Calif. ANDI</Text>
@@ -47,13 +59,13 @@ export default function BottomNav({ navigation, activeScreen }) {
 
 const styles = StyleSheet.create({
   bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#C9C7D0',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#C9C7D0",
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderColor: '#E1E1E1',
+    borderColor: "#E1E1E1",
 
     position: "absolute",
     bottom: 0,
@@ -61,13 +73,11 @@ const styles = StyleSheet.create({
     right: 0,
   },
 
-
-
   navItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   navText: {
     fontSize: 12,
-    color: '#FFFF',
+    color: "#FFFF",
   },
 });

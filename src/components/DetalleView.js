@@ -4,6 +4,7 @@ import axios from "axios";
 import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function DetalleView() {
   const route = useRoute();
@@ -11,7 +12,23 @@ export default function DetalleView() {
   const [recipe, setRecipe] = useState(null);
   const [ingredientes, setIngredientes] = useState([]);
 
+  const navigation = useNavigation();
+
   const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
+
+  // Función para traducir texto usando Google Translate
+  const translateText = async (text, sourceLang, targetLang) => {
+    try {
+      const response = await axios.post(
+        `https://translation.googleapis.com/language/translate/v2?key=${API_KEY_GOOGLE}&q=${text}&source=${sourceLang}&target=${targetLang}`
+      );
+      return response.data.data.translations[0].translatedText;
+    } catch (error) {
+      console.error("Error translating text:", error);
+      return text; // Devuelve el texto original si hay un error
+    }
+  };
 
   useEffect(() => {
     const obtenerDetalles = async () => {
@@ -19,8 +36,31 @@ export default function DetalleView() {
         const response = await axios.get(
           `https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${API_KEY}&includeNutrition=false`
         );
-        setRecipe(response.data);
-        setIngredientes(response.data.extendedIngredients || []);
+
+        const recetas = response.data;
+
+        const translatedRecipes = {
+          ...recetas,
+          title: await translateText(recetas.title, "en", "es"),
+          summary: await translateText(recetas.summary, "en", "es"),
+          instructions: await translateText(recetas.instructions, "en", "es"),
+        };
+
+        setRecipe(translatedRecipes);
+
+        const translatedIngredients = await Promise.all(
+          recetas.extendedIngredients.map(async (ingredient) => {
+            const translatedName = await translateText(
+              ingredient.original,
+              "en",
+              "es"
+            );
+
+            return { ...ingredient, original: translatedName };
+          })
+        );
+
+        setIngredientes(translatedIngredients || []);
       } catch (error) {
         console.error("Error fetching recipe details:", error);
       }
@@ -31,8 +71,6 @@ export default function DetalleView() {
 
   return (
     <View style={styles.container}>
-      
-
       {/* Contenido principal */}
       <ScrollView contentContainerStyle={styles.content}>
         {/* Título y favorito */}
@@ -55,7 +93,16 @@ export default function DetalleView() {
         {ingredientes.map((item) => (
           <View key={item.id} style={styles.ingredientContainer}>
             <Text style={styles.ingredientText}>{item.original}</Text>
-            <FontAwesome name="external-link" size={18} color="#EF5B23" />
+            <FontAwesome
+              name="external-link"
+              size={18}
+              color="#EF5B23"
+              onPress={() =>
+                navigation.navigate("Detalle del ingrediente", {
+                  ingredienteId: item.id,
+                })
+              }
+            />
           </View>
         ))}
 

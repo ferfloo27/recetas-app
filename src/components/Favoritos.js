@@ -12,11 +12,27 @@ import { auth, db } from "../../firebase-config";
 import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { MaterialIcons } from "@expo/vector-icons"; // Importa el ícono de Ionicons
 import BottomNav from "./BottomNav";
+import axios from "axios";
 
 const Favoritos = () => {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
   const [error, setError] = useState(null);
   const navigation = useNavigation();
+
+  const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
+
+  // Función para traducir texto usando Google Translate
+  const translateText = async (text, sourceLang, targetLang) => {
+    try {
+      const response = await axios.post(
+        `https://translation.googleapis.com/language/translate/v2?key=${API_KEY_GOOGLE}&q=${text}&source=${sourceLang}&target=${targetLang}`
+      );
+      return response.data.data.translations[0].translatedText;
+    } catch (error) {
+      console.error("Error translating text:", error);
+      return text; // Devuelve el texto original si hay un error
+    }
+  };
 
   // Método para obtener las recetas favoritas de Firestore
   const fetchFavoritesForUser = async () => {
@@ -38,8 +54,14 @@ const Favoritos = () => {
         }))
         .filter((recipe) => recipe.id && recipe.title); // Filtra recetas incompletas
 
-      console.log("Recetas favoritas:", favoritesData);
-      setFavoriteRecipes(favoritesData); // Actualiza el estado con las recetas válidas
+      const translatedRecipes = await Promise.all(
+        favoritesData.map(async (recipe) => {
+          const translatedTitle = await translateText(recipe.title, "en", "es");
+          return { ...recipe, title: translatedTitle };
+        })
+      );
+
+      setFavoriteRecipes(translatedRecipes); // Actualiza el estado con las recetas válidas
     } catch (error) {
       console.error("Error al cargar favoritos:", error);
       setError("No se pudieron cargar las recetas favoritas.");

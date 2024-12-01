@@ -22,6 +22,21 @@ const Home = () => {
   const navigation = useNavigation();
   const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
 
+  const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
+
+  // Función para traducir texto usando Google Translate
+  const translateText = async (text, sourceLang, targetLang) => {
+    try {
+      const response = await axios.post(
+        `https://translation.googleapis.com/language/translate/v2?key=${API_KEY_GOOGLE}&q=${text}&source=${sourceLang}&target=${targetLang}`
+      );
+      return response.data.data.translations[0].translatedText;
+    } catch (error) {
+      console.error("Error translating text:", error);
+      return text; // Devuelve el texto original si hay un error
+    }
+  };
+
   useEffect(() => {
     fetchRandomRecipes();
   }, []);
@@ -31,7 +46,17 @@ const Home = () => {
       const response = await axios.get(
         `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=5&language=es`
       );
-      setRandomRecipes(response.data.recipes);
+
+      const recetasAleatorias = response.data.recipes;
+
+      const translatedRecipes = await Promise.all(
+        recetasAleatorias.map(async (recipe) => {
+          const translatedTitle = await translateText(recipe.title, "en", "es");
+          return { ...recipe, title: translatedTitle };
+        })
+      );
+
+      setRandomRecipes(translatedRecipes);
       setError(null);
 
       // Verificar favoritos para estas recetas
