@@ -11,6 +11,7 @@ import Favoritos from "./src/components/Favoritos";
 import MenuScreen from "./src/components/MenuScreen";
 import MealDetail from "./src/components/MealDetail";
 import DetalleIngrediente from "./src/components/DetalleIngrediente";
+import ProfileView from "./src/components/ProfileView";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -27,6 +28,8 @@ export default function App() {
             headerStyle: { backgroundColor: "#FF931E" },
             headerTintColor: "#fff",
             headerTitleStyle: { fontWeight: "bold" },
+            gestureEnabled: false,
+            headerShown: false,
           }}
         />
         {/* Pantalla de Buscador */}
@@ -119,6 +122,16 @@ export default function App() {
           component={MealDetail}
           options={{
             title: "Detalle del Menu",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+          }}
+        />
+        <Stack.Screen
+          name="ProfileView"
+          component={ProfileView}
+          options={{
+            title: "Perfil",
             headerStyle: { backgroundColor: "#FF931E" },
             headerTintColor: "#fff",
             headerTitleStyle: { fontWeight: "bold" },

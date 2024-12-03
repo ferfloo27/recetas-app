@@ -14,6 +14,7 @@ import {
 import { doc, setDoc, collection } from "firebase/firestore"; // Importamos Firestore
 import { auth, db } from "../../firebase-config"; // Importamos configuración de Firebase
 import { useNavigation } from "@react-navigation/native";
+import { FontAwesome } from "@expo/vector-icons";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -77,7 +78,10 @@ const Login = () => {
         const user = userCredential.user;
         console.log("Sesión iniciada con el correo:", user.email);
         Alert.alert("Inicio de sesión", `¡Bienvenido, ${user.email}!`);
-        navigation.navigate("Home");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" }], // Reinicia la pila con Home como la única pantalla
+        });
       })
       .catch((error) => {
         console.log("Error al iniciar sesión:", error.message);
@@ -116,21 +120,49 @@ const Login = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Inicio de Sesión</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        placeholder="Correo electrónico"
-        keyboardType="email-address"
-      />
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        placeholder="Contraseña"
-        secureTextEntry
-      />
-      <Pressable style={styles.button} onPress={handleLogin}>
+      <Text style={styles.subtitle}>
+        Ingresa tus credenciales para iniciar sesión.
+      </Text>
+      <Text style={styles.label}>Correo electrónico: </Text>
+      <View style={styles.inputContainer}>
+        <FontAwesome
+          name="envelope"
+          size={24}
+          color="#A1A1AA"
+          style={styles.icon}
+        />
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          placeholder="nombre@ejemplo.com"
+          keyboardType="email-address"
+        />
+      </View>
+      <Text style={styles.label}>Contraseña: </Text>
+      <View style={styles.inputContainer}>
+        <FontAwesome
+          name="lock"
+          size={24}
+          color="#A1A1AA"
+          style={styles.icon}
+        />
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          style={styles.input}
+          placeholder="......"
+          secureTextEntry
+        />
+      </View>
+
+      <Pressable
+        onPress={handleLogin}
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed, // Cambia el estilo cuando está presionado
+        ]}
+      >
         <Text style={styles.buttonText}>Iniciar sesión</Text>
       </Pressable>
       <Pressable style={styles.button} onPress={handleCreateAccount}>
@@ -144,21 +176,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
   },
   input: {
     width: "100%",
-    borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 5,
     padding: 10,
-    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 30,
   },
   button: {
     backgroundColor: "#FF931E",
@@ -168,9 +203,35 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
+  buttonPressed: {
+    backgroundColor: "#3700B3", // Cambia a un color más oscuro al presionarlo
+    transform: [{ scale: 0.95 }], // Reduce ligeramente el tamaño
+  },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
+    borderRadius: 8,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    width: "100%",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  icon: {
+    marginRight: 10,
+    width: 24,
+    height: 24,
   },
 });
 

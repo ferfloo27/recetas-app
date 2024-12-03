@@ -46,12 +46,13 @@ export default function BottomNav({ navigation, activeScreen }) {
         <FontAwesome name="cutlery" size={24} color="#FFFF" />
         <Text style={styles.navText}>Categorías</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigation.navigate("AndiRatingScreen")}
+        onPress={() => navigation.navigate("ProfileView")}
       >
-        <FontAwesome name="star" size={24} color="#FFFF" />
-        <Text style={styles.navText}>Calif. ANDI</Text>
+        <FontAwesome name="user" size={24} color="#FFFF" />
+        <Text style={styles.navText}>Perfil</Text>
       </TouchableOpacity>
     </View>
   );
