@@ -36,9 +36,6 @@ const MealDetail = ({ route }) => {
   const userId = auth.currentUser?.uid; // ID del usuario logueado
   const date = getFormattedDate(); // Fecha actual formateada dinámicamente
 
-  const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
-  const [error, setError] = useState(null);
-
   if (!userId) {
     Alert.alert("Error", "No se pudo obtener el usuario logueado");
     return null;
@@ -51,169 +48,47 @@ const MealDetail = ({ route }) => {
   );
   const mealDocRef = doc(comidasRef, mealName); // Documento específico del mealType
 
-  // Inicializar el documento del tipo de comida si no existe
-  const initializeMealDoc = async () => {
-    try {
-      const snapshot = await getDoc(mealDocRef);
-      if (!snapshot.exists()) {
-        await setDoc(mealDocRef, { recetas: [] }); // Crear el documento vacío
-        console.log(`Documento creado para ${mealName}`);
-      }
-    } catch (error) {
-      Alert.alert("Error", "No se pudo inicializar el documento");
-      console.error(error);
-    }
+  // Añadir una nueva receta
+  const addRecipe = () => {
+    navigation.navigate("AddRecet", { mealName });
   };
 
-  // Obtener recetas desde Firestore
-  const fetchRecipes = async () => {
+  const fetchMealRecipes = async () => {
+    if (!userId) return;
+
+    const mealDocRef = doc(
+      collection(db, `users/${userId}/dailyMenu/${date}/comidas`),
+      mealName
+    );
+
     try {
       const snapshot = await getDoc(mealDocRef);
       if (snapshot.exists()) {
         const data = snapshot.data();
-        const fetchedRecipes = data.recetas || []; // Recuperamos el campo 'recetas'
-        setRecipes(fetchedRecipes);
+        setRecipes(data.recetas || []);
       } else {
-        setRecipes([]); // Si no existe el documento, inicializamos vacío
+        setRecipes([]);
       }
     } catch (error) {
-      Alert.alert("Error", "No se pudieron cargar las recetas");
-      console.error(error);
-    }
-  };
-
-  // Añadir una nueva receta
-  const addRecipe = async (recipe) => {
-    try {
-      const snapshot = await getDoc(mealDocRef);
-      const data = snapshot.exists() ? snapshot.data() : { recetas: [] };
-
-      const updatedRecipes = [...data.recetas, recipe];
-
-      await setDoc(mealDocRef, { recetas: updatedRecipes }, { merge: true });
-      setRecipes((prev) => [...prev, recipe]); // Actualizamos el estado local
-    } catch (error) {
-      Alert.alert("Error", "No se pudo agregar la receta");
-      console.error(error);
+      console.error("Error al cargar las recetas de la comida:", error);
     }
   };
 
   useEffect(() => {
-    const initializeAndFetch = async () => {
-      await initializeMealDoc(); // Asegurarnos de que el documento existe
-      fetchRecipes(); // Cargar recetas
-    };
-    initializeAndFetch();
+    fetchMealRecipes();
   }, []);
-
-  const fetchFavoritesForUser = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      setError("No hay un usuario logueado");
-      return;
-    }
-
-    const userId = user.uid;
-    const favoritesCollectionRef = collection(db, "users", userId, "favorites");
-
-    try {
-      const querySnapshot = await getDocs(favoritesCollectionRef);
-      const favoritesData = querySnapshot.docs
-        .map((doc) => ({
-          id: doc.id, // ID del documento (receta)
-          ...doc.data(), // Información adicional de la receta
-        }))
-        .filter((recipe) => recipe.id && recipe.title); // Filtra recetas incompletas
-
-      console.log("Recetas favoritas:", favoritesData);
-      setFavoriteRecipes(favoritesData); // Actualiza el estado con las recetas válidas
-    } catch (error) {
-      console.error("Error al cargar favoritos:", error);
-      setError("No se pudieron cargar las recetas favoritas.");
-    }
-  };
 
   useEffect(() => {
-    fetchFavoritesForUser();
-  }, []);
-
-  // Verificar si una receta ya está añadida
-  const isRecipeAdded = (recipeId) => {
-    return recipes.some((r) => r.id === recipeId);
-  };
-
-  const handleAddFavoriteToMeal = async (favoriteRecipe) => {
-    if (isRecipeAdded(favoriteRecipe.id)) {
-      Alert.alert("Advertencia", "Esta receta ya está añadida.");
-      return;
-    }
-    try {
-      const snapshot = await getDoc(mealDocRef);
-      const data = snapshot.exists() ? snapshot.data() : { recetas: [] };
-
-      // Crear una nueva lista de recetas con la receta añadida
-      const updatedRecipes = [
-        ...data.recetas,
-        {
-          id: favoriteRecipe.id,
-          recipeName: favoriteRecipe.title, // Usamos el título de la receta favorita
-          imageUrl: favoriteRecipe.image || "https://via.placeholder.com/150",
-        },
-      ];
-
-      // Actualizar Firestore
-      await setDoc(mealDocRef, { recetas: updatedRecipes }, { merge: true });
-
-      // Actualizar el estado local
-      setRecipes(updatedRecipes);
-
-      Alert.alert("Éxito", `${favoriteRecipe.title} añadida a ${mealName}`);
-    } catch (error) {
-      Alert.alert("Error", "No se pudo añadir la receta");
-      console.error(error);
-    }
-  };
+    const unsubscribe = navigation.addListener("focus", () => {
+      fetchMealRecipes(); // Refrescar al volver a esta vista
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{mealName}</Text>
-      {favoriteRecipes.length === 0 ? (
-        <Text style={styles.noFavoritesText}>
-          No tienes recetas favoritas guardadas.
-        </Text>
-      ) : (
-        <FlatList
-          data={favoriteRecipes} // Las recetas favoritas ya filtradas
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.recipeItem}
-              onPress={() =>
-                navigation.navigate("Detalle de la Receta", {
-                  recipeId: item.id,
-                })
-              }
-            >
-              <Image
-                source={{ uri: item.image || "https://via.placeholder.com/80" }}
-                style={styles.recipeImage}
-              />
 
-              <Text style={styles.recipeTitle}>{item.title}</Text>
-              {!isRecipeAdded(item.id) && ( // Condición para mostrar el ícono
-                <Pressable
-                  style={styles.addIconButton}
-                  onPress={() => handleAddFavoriteToMeal(item)}
-                >
-                  <MaterialIcons name="add-circle" size={32} color="#EF5B23" />
-                </Pressable>
-              )}
-            </Pressable>
-          )}
-          initialNumToRender={5}
-          windowSize={10}
-        />
-      )}
       {
         // Listado de recetas
         /*<FlatList
@@ -233,18 +108,28 @@ const MealDetail = ({ route }) => {
         )}
       />*/
       }
-      {/*}
-      <Pressable
-        style={styles.addButton}
-        onPress={() =>
-          addRecipe({
-            recipeName: "Nueva receta",
-            imageUrl: "https://via.placeholder.com/150", // URL genérica
-          })
-        }
-      >
-        <Text style={styles.addButtonText}>Añadir receta</Text>
-      </Pressable>*/}
+
+      {recipes.length === 0 ? (
+        <Text style={styles.noRecipesText}>No hay recetas añadidas aún.</Text>
+      ) : (
+        <FlatList
+          data={recipes}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.recipeItem}>
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.recipeImage}
+              />
+              <Text style={styles.recipeTitle}>{item.recipeName}</Text>
+            </View>
+          )}
+        />
+      )}
+
+      <Pressable style={styles.addButton} onPress={addRecipe}>
+        <Text style={styles.addButtonText}> + </Text>
+      </Pressable>
     </View>
   );
 };
@@ -268,13 +153,22 @@ const styles = StyleSheet.create({
   recipeName: { flex: 1, fontSize: 16 },
   image: { width: 50, height: 50, borderRadius: 8, marginRight: 16 },
   addButton: {
-    backgroundColor: "#EF5B23",
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 16,
+    position: "absolute", // Posicionamiento absoluto
+    bottom: 20, // Distancia desde el borde inferior
+    right: 20, // Distancia desde el borde derecho
+    backgroundColor: "#ff5c5c", // Color del botón
+    width: 60, // Ancho
+    height: 60, // Alto
+    borderRadius: 30, // Hacerlo circular
+    justifyContent: "center", // Centrar contenido
+    alignItems: "center", // Centrar contenido
+    shadowColor: "#000", // Sombra
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5, // Sombra en Android
   },
-  addButtonText: { color: "#fff", fontWeight: "bold" },
+  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 40 },
   deleteButton: { marginLeft: 16 },
   deleteText: { color: "#EF5B23", fontWeight: "bold" },
   recipeItem: {

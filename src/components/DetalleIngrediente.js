@@ -8,6 +8,7 @@ export default function DetalleIngrediente() {
   const route = useRoute();
   const { ingredienteId } = route.params; // Recibe el id del ingrediente como parámetro
   const [ingredient, setIngredient] = useState(null);
+  const [selectedNutrients, setSelectedNutrients] = useState([]);
 
   const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
@@ -41,6 +42,29 @@ export default function DetalleIngrediente() {
         };
 
         setIngredient(translatedRecipes);
+
+        // Filtrar nutrientes específicos y guardar percentOfDailyNeeds
+        const nutrientesDeseados = [
+          "Vitamin C",
+          "Fiber",
+          "Protein",
+          "Potassium",
+          "Magnesium",
+          "Calcium",
+          "Vitamin B6",
+          "Iron",
+          "Sugar",
+          "Saturated Fat",
+          "Cholesterol",
+        ]; // Añade aquí los nutrientes que necesitas
+        const nutrientesSeleccionados = ingrediente.nutrition.nutrients
+          .filter((nutriente) => nutrientesDeseados.includes(nutriente.name))
+          .map((nutriente) => ({
+            name: nutriente.name,
+            percentOfDailyNeeds: nutriente.percentOfDailyNeeds,
+          }));
+
+        setSelectedNutrients(nutrientesSeleccionados);
       } catch (error) {
         console.error("Error fetching ingredient details:", error);
       }
@@ -143,6 +167,22 @@ export default function DetalleIngrediente() {
             vitamina C. Es especialmente rico en colina, un nutriente importante
             para la salud cerebral.
           </Text>
+
+          {/* Tabla de nutrientes */}
+          <View style={styles.table}>
+            <View style={styles.tableRowHeader}>
+              <Text style={styles.tableHeader}>Nutrientes</Text>
+              <Text style={styles.tableHeader}>Porcentaje</Text>
+            </View>
+            {selectedNutrients.map((nutrient) => (
+              <View style={styles.tableRow} key={nutrient.name}>
+                <Text style={styles.tableCell}>{nutrient.name}</Text>
+                <Text style={styles.tableCell}>
+                  {nutrient.percentOfDailyNeeds} %
+                </Text>
+              </View>
+            ))}
+          </View>
         </ScrollView>
       ) : (
         <Text style={styles.loadingText}>

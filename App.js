@@ -12,6 +12,7 @@ import MenuScreen from "./src/components/MenuScreen";
 import MealDetail from "./src/components/MealDetail";
 import DetalleIngrediente from "./src/components/DetalleIngrediente";
 import ProfileView from "./src/components/ProfileView";
+import AddRecet from "./src/components/AddRecet";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -117,6 +118,18 @@ export default function App() {
             headerTitleStyle: { fontWeight: "bold" },
           }}
         />
+
+        <Stack.Screen
+          name="AddRecet"
+          component={AddRecet}
+          options={{
+            title: "Agregar Recetas",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+          }}
+        />
+
         <Stack.Screen
           name="MealDetail"
           component={MealDetail}

@@ -14,12 +14,33 @@ const MenuScreen = () => {
     { id: "3", name: "Cena" },
   ];
 
+  const getFormattedDate = () => {
+    const date = new Date();
+    const months = [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
+    ];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    return `${day} de ${month}`;
+  };
+
   return (
     <View style={styles.container}>
       {/* Cabecera con el título y fecha */}
       <View style={styles.header}>
         <Text style={styles.title}>Diario</Text>
-        <Text style={styles.date}>{"< 6 de Octubre >"}</Text>
+        <Text style={styles.date}>{`< ${getFormattedDate()} >`}</Text>
         <View style={styles.nutritionSummary}>
           <View style={styles.nutrientBox}>
             <Text style={styles.nutrientValue}>0 gr</Text>
