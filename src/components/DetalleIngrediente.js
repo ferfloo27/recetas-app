@@ -10,6 +10,9 @@ export default function DetalleIngrediente() {
   const [ingredient, setIngredient] = useState(null);
   const [selectedNutrients, setSelectedNutrients] = useState([]);
 
+  const [finalValue, setFinalValue] = useState(0);
+
+
   const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
 
@@ -32,46 +35,90 @@ export default function DetalleIngrediente() {
         const response = await axios.get(
           `https://api.spoonacular.com/food/ingredients/${ingredienteId}/information?apiKey=${API_KEY}&amount=1`
         );
-
+  
         const ingrediente = response.data;
+  
         const translatedRecipes = {
           ...ingrediente,
           name: await translateText(ingrediente.name, "en", "es"),
           aisle: await translateText(ingrediente.aisle, "en", "es"),
           original: await translateText(ingrediente.original, "en", "es"),
         };
-
+  
         setIngredient(translatedRecipes);
-
-        // Filtrar nutrientes específicos y guardar percentOfDailyNeeds
+  
+        // Obtener calorías del ingrediente
+        const calories = ingrediente.nutrition.nutrients.find(
+          (nutriente) => nutriente.name === "Calories"
+        )?.amount || 1; // Por seguridad, asignamos 1 si no se encuentran calorías
+  
+        // Operaciones personalizadas para cada nutriente
         const nutrientesDeseados = [
-          "Vitamin C",
-          "Fiber",
-          "Protein",
-          "Potassium",
-          "Magnesium",
-          "Calcium",
-          "Vitamin B6",
-          "Iron",
-          "Sugar",
-          "Saturated Fat",
-          "Cholesterol",
-        ]; // Añade aquí los nutrientes que necesitas
+          { name: "Vitamin C", factor: 10 },
+          { name: "Fiber", factor: 8 },
+          { name: "Protein", factor: 9 },
+          { name: "Potassium", factor: 7 },
+          { name: "Magnesium", factor: 6 },
+          { name: "Calcium", factor: 7 },
+          { name: "Vitamin B6", factor: 6 },
+          { name: "Iron", factor: 5 },
+          { name: "Vitamin B1", factor: 5 },
+          { name: "Folate", factor: 4 },
+          { name: "Vitamin B3", factor: 4 },
+          { name: "Vitamin B5", factor: 4 },
+          { name: "Vitamin B2", factor: 3 },
+          { name: "Vitamin A", factor: 3 },
+          { name: "Copper", factor: 3 },
+          { name: "Zinc", factor: 3 },
+          { name: "Phosphorus", factor: 2 },
+          { name: "Vitamin K", factor: 2 },
+          { name: "Manganese", factor: 2 },
+          { name: "Selenium", factor: 1 },
+          { name: "Vitamin E", factor: 1 },
+          { name: "Sugar", factor: -5 },
+          { name: "Saturated Fat", factor: -7 },
+          { name: "Cholesterol", factor: -3 },
+          { name: "Fat", factor: -2 },
+        ];
+  
+        let valorTotal = 0;
+  
         const nutrientesSeleccionados = ingrediente.nutrition.nutrients
-          .filter((nutriente) => nutrientesDeseados.includes(nutriente.name))
-          .map((nutriente) => ({
-            name: nutriente.name,
-            percentOfDailyNeeds: nutriente.percentOfDailyNeeds,
-          }));
-
+          .filter((nutriente) =>
+            nutrientesDeseados.some((n) => n.name === nutriente.name)
+          )
+          .map((nutriente) => {
+            const factor = nutrientesDeseados.find(
+              (n) => n.name === nutriente.name
+            )?.factor || 1;
+  
+            // Asegurarse de que nutriente.amount es un número válido
+            const valorCalculado = (nutriente.amount * factor) / calories;
+  
+            valorTotal += valorCalculado; // Actualizar valorTotal de forma acumulativa
+  
+            return {
+              name: nutriente.name,
+              valorCalculado, // Guardar el valor calculado por nutriente
+            };
+          });
+  
+        // Aplicar las condiciones finales para el resultado
+        let finalResult = (valorTotal * 1000.0) / 1300.0;
+        finalResult = Math.max(0, Math.min(finalResult, 1000.0)); // Limitar a un rango de 0 a 1000
+  
         setSelectedNutrients(nutrientesSeleccionados);
+        setFinalValue(finalResult); // Guardar el valor total en un estado
       } catch (error) {
         console.error("Error fetching ingredient details:", error);
       }
     };
-
+  
     fetchIngredientDetails();
   }, [ingredienteId]);
+  
+  
+  
 
   const screenWidth = Dimensions.get("window").width;
 
@@ -167,6 +214,16 @@ export default function DetalleIngrediente() {
             vitamina C. Es especialmente rico en colina, un nutriente importante
             para la salud cerebral.
           </Text>
+
+          <View>
+            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+              El Valor resultante es:
+            </Text>
+            <Text style={{ fontSize: 16 }}>
+              {finalValue.toFixed(2)} {/* Formatear a 2 decimales */}
+            </Text>
+          </View>
+
 
           {/* Tabla de nutrientes */}
           <View style={styles.table}>
