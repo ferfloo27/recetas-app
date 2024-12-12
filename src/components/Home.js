@@ -44,7 +44,7 @@ const Home = () => {
   const fetchRandomRecipes = async () => {
     try {
       const response = await axios.get(
-        `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=5&language=es`
+        `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=1&language=es`// Cambia el número de recetas aleatorias
       );
 
       const recetasAleatorias = response.data.recipes;

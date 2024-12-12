@@ -91,7 +91,7 @@ const Buscador = () => {
     try {
       const traslatedQuery = await translateText(searchQuery, "es", "en");
       const response = await axios.get(
-        `https://api.spoonacular.com/food/ingredients/search?apiKey=${API_KEY}&query=${traslatedQuery}&number=10&sortDirection=desc`
+        `https://api.spoonacular.com/food/ingredients/search?apiKey=${API_KEY}&query=${traslatedQuery}&number=3&sortDirection=desc` // Cambia el número de ingredientes
       );
 
       const ingredientes = response.data.results;

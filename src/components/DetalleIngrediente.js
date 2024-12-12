@@ -199,12 +199,20 @@ export default function DetalleIngrediente() {
             absolute // Muestra valores absolutos
           />
 
-          {/* Valor ANDI */}
-          <Text style={styles.sectionTitle}>Valor ANDI: 30/100</Text>
+          {/* Valor ANDI 
+          <Text style={styles.sectionTitle}>Valor ANDI:</Text>
           <Text style={styles.text}>
             El huevo tiene una densidad de nutrientes moderada, pero sigue
             siendo un buen alimento.
-          </Text>
+          </Text>*/}
+
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.sectionTitle}>Valor ANDI:</Text>
+            <Text style={{ fontSize: 16, marginLeft: 8, paddingTop:5 }}>
+              {finalValue.toFixed(0)} {/* Formatear a 0 decimales */}
+            </Text>
+          </View>
+
 
           {/* Descripción */}
           <Text style={styles.sectionTitle}>Descripción:</Text>
@@ -214,15 +222,6 @@ export default function DetalleIngrediente() {
             vitamina C. Es especialmente rico en colina, un nutriente importante
             para la salud cerebral.
           </Text>
-
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-              El Valor resultante es:
-            </Text>
-            <Text style={{ fontSize: 16 }}>
-              {finalValue.toFixed(2)} {/* Formatear a 2 decimales */}
-            </Text>
-          </View>
 
 
           {/* Tabla de nutrientes */}
