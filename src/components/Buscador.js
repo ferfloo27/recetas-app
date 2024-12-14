@@ -7,11 +7,14 @@ import {
   Image,
   StyleSheet,
   Pressable,
-  TouchableOpacity,
+  Alert,
 } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { auth, db } from "../../firebase-config";
+import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 
 const Buscador = () => {
   const navigation = useNavigation();
@@ -26,6 +29,8 @@ const Buscador = () => {
   );
   const [activeView, setActiveView] = useState("recetas");
   const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favorites, setFavorites] = useState({});
 
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
   const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
@@ -190,6 +195,40 @@ const Buscador = () => {
     searchRecetasPorAlgunosIngredientes();
   };
 
+  const toggleFavorite = async (recipe) => {
+    const user = auth.currentUser; // Obtén el usuario actual
+    if (!user) {
+      Alert.alert("Error", "Debes iniciar sesión para agregar favoritos.");
+      return;
+    }
+
+    const userId = user.uid; // UID del usuario actual
+    const recipeId = recipe.id.toString();
+    const docRef = doc(db, "users", userId, "favorites", recipeId); // Ruta de Firestore
+
+    try {
+      if (favorites[recipeId]) {
+        // Eliminar de favoritos
+        await deleteDoc(docRef);
+        Alert.alert("Eliminado de favoritos", `${recipe.title} eliminado.`);
+      } else {
+        // Agregar a favoritos
+        await setDoc(docRef, {
+          id: recipe.id,
+          title: recipe.title,
+          image: recipe.image,
+        });
+        Alert.alert("Agregado a favoritos", `${recipe.title} agregado.`);
+      }
+
+      // Actualizar estado local
+      setFavorites((prev) => ({ ...prev, [recipeId]: !prev[recipeId] }));
+    } catch (error) {
+      console.error("Error al manejar favorito:", error);
+      Alert.alert("Error", "No se pudo actualizar el favorito.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
@@ -221,6 +260,21 @@ const Buscador = () => {
           >
             <Image source={{ uri: item.image }} style={styles.recipeImage} />
             <Text style={styles.recipeTitle}>{item.title}</Text>
+            <Pressable
+              onPress={() => toggleFavorite(item)}
+              accessibilityLabel={
+                favorites[item.id]
+                  ? "Eliminar de favoritos"
+                  : "Agregar a favoritos"
+              }
+              style={styles.favoriteButton}
+            >
+              <MaterialIcons
+                name={favorites[item.id] ? "favorite" : "favorite-border"}
+                size={28}
+                color={favorites[item.id] ? "red" : "gray"}
+              />
+            </Pressable>
           </Pressable>
         )}
       />
@@ -260,7 +314,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
     backgroundColor: "#E6E6E6",
+    elevation: 3,
+    paddingEnd: 10,
   },
+
   recipeImage: {
     width: 100,
     height: 50,
