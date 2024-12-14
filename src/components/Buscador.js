@@ -68,7 +68,7 @@ const Buscador = () => {
     try {
       const traslatedQuery = await translateText(searchQuery, "es", "en");
       const response = await axios.get(
-        `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&query=${traslatedQuery}&number=5`
+        `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&query=${traslatedQuery}&number=3`
       );
 
       const recetas = response.data.results;
@@ -91,7 +91,7 @@ const Buscador = () => {
     try {
       const traslatedQuery = await translateText(searchQuery, "es", "en");
       const response = await axios.get(
-        `https://api.spoonacular.com/food/ingredients/search?apiKey=${API_KEY}&query=${traslatedQuery}&number=10&sortDirection=desc`
+        `https://api.spoonacular.com/food/ingredients/search?apiKey=${API_KEY}&query=${traslatedQuery}&number=3&sortDirection=desc` // Cambia el número de ingredientes
       );
 
       const ingredientes = response.data.results;
@@ -193,7 +193,6 @@ const Buscador = () => {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <FontAwesome name="arrow-left" size={24} />
         <TextInput
           style={styles.input}
           placeholder="Buscar receta o ingrediente..."
@@ -207,7 +206,6 @@ const Buscador = () => {
           color="#C9C7D0"
           style={styles.iconoSearch}
         />
-        <FontAwesome name="filter" size={24} />
       </View>
 
       <FlatList
@@ -245,9 +243,8 @@ const styles = StyleSheet.create({
     borderColor: "#C9C7D0",
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
     paddingBottom: 15,
   },
   iconoSearch: {
