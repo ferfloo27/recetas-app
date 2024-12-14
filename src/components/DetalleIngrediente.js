@@ -9,6 +9,8 @@ export default function DetalleIngrediente() {
   const { ingredienteId } = route.params; // Recibe el id del ingrediente como parámetro
   const [ingredient, setIngredient] = useState(null);
   const [selectedNutrients, setSelectedNutrients] = useState([]);
+  const [tableNutrients, setTableNutrients] = useState([]);
+
 
   const [finalValue, setFinalValue] = useState(0);
 
@@ -50,9 +52,9 @@ export default function DetalleIngrediente() {
         // Obtener calorías del ingrediente
         const calories = ingrediente.nutrition.nutrients.find(
           (nutriente) => nutriente.name === "Calories"
-        )?.amount || 1; // Por seguridad, asignamos 1 si no se encuentran calorías
+        )?.amount || 1;
   
-        // Operaciones personalizadas para cada nutriente
+        // Procesar todos los nutrientes y mantener la lógica original
         const nutrientesDeseados = [
           { name: "Vitamin C", factor: 10 },
           { name: "Fiber", factor: 8 },
@@ -87,41 +89,96 @@ export default function DetalleIngrediente() {
           .filter((nutriente) =>
             nutrientesDeseados.some((n) => n.name === nutriente.name)
           )
-          .map((nutriente) => {
+          .map(async (nutriente) => {
             const factor = nutrientesDeseados.find(
               (n) => n.name === nutriente.name
             )?.factor || 1;
   
-            // Asegurarse de que nutriente.amount es un número válido
+            // Traducir el nombre del nutriente a español
+            const translatedName = await translateText(nutriente.name, "en", "es");
+  
             const valorCalculado = (nutriente.amount * factor) / calories;
   
-            valorTotal += valorCalculado; // Actualizar valorTotal de forma acumulativa
+            valorTotal += valorCalculado;
   
             return {
-              name: nutriente.name,
-              valorCalculado, // Guardar el valor calculado por nutriente
+              name: translatedName, // Nombre traducido
+              valorCalculado,
             };
           });
   
-        // Aplicar las condiciones finales para el resultado
-        let finalResult = (valorTotal * 1000.0) / 1300.0;
-        finalResult = Math.max(0, Math.min(finalResult, 1000.0)); // Limitar a un rango de 0 a 1000
+        // Esperar a que todas las traducciones se completen
+        const nutrientesConTraducciones = await Promise.all(nutrientesSeleccionados);
   
-        setSelectedNutrients(nutrientesSeleccionados);
-        setFinalValue(finalResult); // Guardar el valor total en un estado
+        // Aplicar las condiciones finales para el resultado
+        let finalResult = (valorTotal * 1000.0) / 1250.0;
+        finalResult = Math.max(0, Math.min(finalResult, 1000.0));
+  
+        setSelectedNutrients(nutrientesConTraducciones);
+        setFinalValue(finalResult);
+  
+        // Llamar a la nueva función para filtrar los nutrientes de la tabla
+        filterTableNutrients(ingrediente);
       } catch (error) {
         console.error("Error fetching ingredient details:", error);
       }
     };
   
+    const filterTableNutrients = async (ingrediente) => {
+      const tableNutrientesDeseados = [
+        "Vitamin C",
+        "Fiber",
+        "Protein",
+        "Potassium",
+        "Magnesium",
+        "Calcium",
+        "Vitamin B6",
+        "Iron",
+        "Sugar",
+        "Saturated Fat",
+        "Cholesterol",
+      ];
+  
+      const nutrientesParaTabla = await Promise.all(
+        ingrediente.nutrition.nutrients
+          .filter((nutriente) => tableNutrientesDeseados.includes(nutriente.name))
+          .map(async (nutriente) => {
+            // Traducir el nombre del nutriente
+            const translatedName = await translateText(nutriente.name, "en", "es");
+  
+            return {
+              name: translatedName, // Nombre traducido
+              percentOfDailyNeeds: nutriente.percentOfDailyNeeds || 0,
+            };
+          })
+      );
+  
+      setTableNutrients(nutrientesParaTabla);
+    };
+  
     fetchIngredientDetails();
   }, [ingredienteId]);
   
-  
-  
+  // Función para obtener el mensaje basado en el valor ANDI
+  const obtenerMensajeANDI = (valor) => {
+    if (valor <= 10) {
+      return "Muy baja densidad. Este ingrediente tiene muy pocos nutrientes en comparación con su contenido calórico. Úsalo con moderación.";
+    } else if (valor <= 200) {
+      return "Baja densidad. Este ingrediente aporta algunos nutrientes, es útil como complemento, pero debe combinarse con otros ingredientes más ricos en nutrientes.";
+    } else if (valor <= 400) {
+      return "Regular. Este ingrediente contiene una cantidad moderada de nutrientes, adecuado para una dieta balanceada.";
+    } else if (valor <= 800) {
+      return "Buena densidad. Este ingrediente es nutritivo y puede ser parte importante de una alimentación saludable.";
+    } else {
+      return "¡Excelente! Este ingrediente tiene una densidad de nutrientes excepcional y es una opción excelente para tu dieta.";
+    }
+  };
+
+  // Obtener el mensaje correspondiente al valor ANDI
+  const mensaje = obtenerMensajeANDI(finalValue.toFixed(0));
 
   const screenWidth = Dimensions.get("window").width;
-
+  
   return (
     <View style={styles.container}>
       {ingredient ? (
@@ -199,46 +256,49 @@ export default function DetalleIngrediente() {
             absolute // Muestra valores absolutos
           />
 
-          {/* Valor ANDI 
-          <Text style={styles.sectionTitle}>Valor ANDI:</Text>
-          <Text style={styles.text}>
-            El huevo tiene una densidad de nutrientes moderada, pero sigue
-            siendo un buen alimento.
-          </Text>*/}
+              <View style={{ height: 2, backgroundColor: '#EF5B23', marginVertical: 10 }} />
+      
+            <View style={styles.container}>
+              {/* Sección para mostrar el Valor ANDI */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.sectionTitle}>Valor ANDI:</Text>
+                <Text style={{ fontSize: 17, marginLeft: 8, paddingTop: 9 }}>
+                  {finalValue.toFixed(0)} {/* Formatear a 0 decimales */}
+                </Text>
+              </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.sectionTitle}>Valor ANDI:</Text>
-            <Text style={{ fontSize: 16, marginLeft: 8, paddingTop:5 }}>
-              {finalValue.toFixed(0)} {/* Formatear a 0 decimales */}
-            </Text>
-          </View>
-
+              {/* Sección para mostrar la interpretación */}
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.sectionTitle}>Interpretación:</Text>
+                <Text style={styles.interpretationText}>{mensaje}</Text>
+              </View>
+            </View>
+ 
+              <View style={{ height: 2, backgroundColor: '#EF5B23', marginVertical: 10 }} />
 
           {/* Descripción */}
-          <Text style={styles.sectionTitle}>Descripción:</Text>
+          <Text style={styles.sectionTitle}>Curiosidades del ingrediente:</Text>
           <Text style={styles.text}>
-            El huevo es una excelente fuente de proteínas de alta calidad y
-            contiene todas las vitaminas y minerales esenciales, excepto la
-            vitamina C. Es especialmente rico en colina, un nutriente importante
-            para la salud cerebral.
+            En el siguiente cuadro se muestra cuanto de un nutriente 
+            tiene un alimento en relación con lo que se debe consumir cada día.
           </Text>
-
 
           {/* Tabla de nutrientes */}
           <View style={styles.table}>
             <View style={styles.tableRowHeader}>
-              <Text style={styles.tableHeader}>Nutrientes</Text>
-              <Text style={styles.tableHeader}>Porcentaje</Text>
+              <Text style={styles.tableHeader}>Nombre del nutriente</Text>
+              <Text style={styles.tableHeader}>% Necesidades diarias cubierto</Text>
             </View>
-            {selectedNutrients.map((nutrient) => (
+            {tableNutrients.map((nutrient) => (
               <View style={styles.tableRow} key={nutrient.name}>
                 <Text style={styles.tableCell}>{nutrient.name}</Text>
                 <Text style={styles.tableCell}>
-                  {nutrient.percentOfDailyNeeds} %
+                  {nutrient.percentOfDailyNeeds.toFixed(2)} %
                 </Text>
               </View>
             ))}
           </View>
+
         </ScrollView>
       ) : (
         <Text style={styles.loadingText}>
@@ -294,10 +354,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     fontSize: 16,
+    width: "50%",
+    paddingStart: 20,
+    
   },
   tableCell: {
     fontSize: 14,
     color: "black",
+    marginEnd: 30,
+    marginStart: 20,
   },
   sectionTitle: {
     fontSize: 18,
@@ -314,5 +379,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
     marginTop: 20,
+  },
+  interpretationText: {
+    fontSize: 16,
+    marginTop: 4,
   },
 });
