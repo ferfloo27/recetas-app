@@ -193,7 +193,7 @@ const Buscador = () => {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <FontAwesome name="arrow-left" size={24} />
+        
         <TextInput
           style={styles.input}
           placeholder="Buscar receta o ingrediente..."
@@ -207,7 +207,7 @@ const Buscador = () => {
           color="#C9C7D0"
           style={styles.iconoSearch}
         />
-        <FontAwesome name="filter" size={24} />
+        
       </View>
 
       <FlatList
@@ -245,9 +245,8 @@ const styles = StyleSheet.create({
     borderColor: "#C9C7D0",
   },
   inputContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
     paddingBottom: 15,
   },
   iconoSearch: {
