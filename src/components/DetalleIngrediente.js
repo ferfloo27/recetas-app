@@ -11,11 +11,9 @@ export default function DetalleIngrediente() {
   const [selectedNutrients, setSelectedNutrients] = useState([]);
   const [tableNutrients, setTableNutrients] = useState([]);
 
-
   const [finalValue, setFinalValue] = useState(0);
 
-
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
 
   // Función para traducir texto usando Google Translate
@@ -37,23 +35,24 @@ export default function DetalleIngrediente() {
         const response = await axios.get(
           `https://api.spoonacular.com/food/ingredients/${ingredienteId}/information?apiKey=${API_KEY}&amount=1`
         );
-  
+
         const ingrediente = response.data;
-  
+
         const translatedRecipes = {
           ...ingrediente,
           name: await translateText(ingrediente.name, "en", "es"),
           aisle: await translateText(ingrediente.aisle, "en", "es"),
           original: await translateText(ingrediente.original, "en", "es"),
         };
-  
+
         setIngredient(translatedRecipes);
-  
+
         // Obtener calorías del ingrediente
-        const calories = ingrediente.nutrition.nutrients.find(
-          (nutriente) => nutriente.name === "Calories"
-        )?.amount || 1;
-  
+        const calories =
+          ingrediente.nutrition.nutrients.find(
+            (nutriente) => nutriente.name === "Calories"
+          )?.amount || 1;
+
         // Procesar todos los nutrientes y mantener la lógica original
         const nutrientesDeseados = [
           { name: "Vitamin C", factor: 10 },
@@ -82,48 +81,54 @@ export default function DetalleIngrediente() {
           { name: "Cholesterol", factor: -3 },
           { name: "Fat", factor: -2 },
         ];
-  
+
         let valorTotal = 0;
-  
+
         const nutrientesSeleccionados = ingrediente.nutrition.nutrients
           .filter((nutriente) =>
             nutrientesDeseados.some((n) => n.name === nutriente.name)
           )
           .map(async (nutriente) => {
-            const factor = nutrientesDeseados.find(
-              (n) => n.name === nutriente.name
-            )?.factor || 1;
-  
+            const factor =
+              nutrientesDeseados.find((n) => n.name === nutriente.name)
+                ?.factor || 1;
+
             // Traducir el nombre del nutriente a español
-            const translatedName = await translateText(nutriente.name, "en", "es");
-  
+            const translatedName = await translateText(
+              nutriente.name,
+              "en",
+              "es"
+            );
+
             const valorCalculado = (nutriente.amount * factor) / calories;
-  
+
             valorTotal += valorCalculado;
-  
+
             return {
               name: translatedName, // Nombre traducido
               valorCalculado,
             };
           });
-  
+
         // Esperar a que todas las traducciones se completen
-        const nutrientesConTraducciones = await Promise.all(nutrientesSeleccionados);
-  
+        const nutrientesConTraducciones = await Promise.all(
+          nutrientesSeleccionados
+        );
+
         // Aplicar las condiciones finales para el resultado
         let finalResult = (valorTotal * 1000.0) / 1250.0;
         finalResult = Math.max(0, Math.min(finalResult, 1000.0));
-  
+
         setSelectedNutrients(nutrientesConTraducciones);
         setFinalValue(finalResult);
-  
+
         // Llamar a la nueva función para filtrar los nutrientes de la tabla
         filterTableNutrients(ingrediente);
       } catch (error) {
         console.error("Error fetching ingredient details:", error);
       }
     };
-  
+
     const filterTableNutrients = async (ingrediente) => {
       const tableNutrientesDeseados = [
         "Vitamin C",
@@ -138,27 +143,33 @@ export default function DetalleIngrediente() {
         "Saturated Fat",
         "Cholesterol",
       ];
-  
+
       const nutrientesParaTabla = await Promise.all(
         ingrediente.nutrition.nutrients
-          .filter((nutriente) => tableNutrientesDeseados.includes(nutriente.name))
+          .filter((nutriente) =>
+            tableNutrientesDeseados.includes(nutriente.name)
+          )
           .map(async (nutriente) => {
             // Traducir el nombre del nutriente
-            const translatedName = await translateText(nutriente.name, "en", "es");
-  
+            const translatedName = await translateText(
+              nutriente.name,
+              "en",
+              "es"
+            );
+
             return {
               name: translatedName, // Nombre traducido
               percentOfDailyNeeds: nutriente.percentOfDailyNeeds || 0,
             };
           })
       );
-  
+
       setTableNutrients(nutrientesParaTabla);
     };
-  
+
     fetchIngredientDetails();
   }, [ingredienteId]);
-  
+
   // Función para obtener el mensaje basado en el valor ANDI
   const obtenerMensajeANDI = (valor) => {
     if (valor <= 10) {
@@ -178,7 +189,7 @@ export default function DetalleIngrediente() {
   const mensaje = obtenerMensajeANDI(finalValue.toFixed(0));
 
   const screenWidth = Dimensions.get("window").width;
-  
+
   return (
     <View style={styles.container}>
       {ingredient ? (
@@ -256,38 +267,52 @@ export default function DetalleIngrediente() {
             absolute // Muestra valores absolutos
           />
 
-              <View style={{ height: 2, backgroundColor: '#EF5B23', marginVertical: 10 }} />
-      
-            <View style={styles.container}>
-              {/* Sección para mostrar el Valor ANDI */}
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={styles.sectionTitle}>Valor ANDI:</Text>
-                <Text style={{ fontSize: 17, marginLeft: 8, paddingTop: 9 }}>
-                  {finalValue.toFixed(0)} {/* Formatear a 0 decimales */}
-                </Text>
-              </View>
+          <View
+            style={{
+              height: 2,
+              backgroundColor: "#EF5B23",
+              marginVertical: 10,
+            }}
+          />
 
-              {/* Sección para mostrar la interpretación */}
-              <View style={{ marginTop: 8 }}>
-                <Text style={styles.sectionTitle}>Interpretación:</Text>
-                <Text style={styles.interpretationText}>{mensaje}</Text>
-              </View>
+          <View style={styles.container}>
+            {/* Sección para mostrar el Valor ANDI */}
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={styles.sectionTitle}>Valor ANDI:</Text>
+              <Text style={{ fontSize: 17, marginLeft: 8, paddingTop: 9 }}>
+                {finalValue.toFixed(0)} {/* Formatear a 0 decimales */}
+              </Text>
             </View>
- 
-              <View style={{ height: 2, backgroundColor: '#EF5B23', marginVertical: 10 }} />
+
+            {/* Sección para mostrar la interpretación */}
+            <View style={{ marginTop: 8 }}>
+              <Text style={styles.sectionTitle}>Interpretación:</Text>
+              <Text style={styles.interpretationText}>{mensaje}</Text>
+            </View>
+          </View>
+
+          <View
+            style={{
+              height: 2,
+              backgroundColor: "#EF5B23",
+              marginVertical: 10,
+            }}
+          />
 
           {/* Descripción */}
           <Text style={styles.sectionTitle}>Curiosidades del ingrediente:</Text>
           <Text style={styles.text}>
-            En el siguiente cuadro se muestra cuanto de un nutriente 
-            tiene un alimento en relación con lo que se debe consumir cada día.
+            En el siguiente cuadro se muestra cuanto de un nutriente tiene un
+            alimento en relación con lo que se debe consumir cada día.
           </Text>
 
           {/* Tabla de nutrientes */}
           <View style={styles.table}>
             <View style={styles.tableRowHeader}>
               <Text style={styles.tableHeader}>Nombre del nutriente</Text>
-              <Text style={styles.tableHeader}>% Necesidades diarias cubierto</Text>
+              <Text style={styles.tableHeader}>
+                % Necesidades diarias cubierto
+              </Text>
             </View>
             {tableNutrients.map((nutrient) => (
               <View style={styles.tableRow} key={nutrient.name}>
@@ -298,7 +323,6 @@ export default function DetalleIngrediente() {
               </View>
             ))}
           </View>
-
         </ScrollView>
       ) : (
         <Text style={styles.loadingText}>
@@ -356,7 +380,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     width: "50%",
     paddingStart: 20,
-    
   },
   tableCell: {
     fontSize: 14,

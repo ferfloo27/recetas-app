@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -20,7 +21,7 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [favorites, setFavorites] = useState({});
   const navigation = useNavigation();
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
 
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
 
@@ -44,7 +45,7 @@ const Home = () => {
   const fetchRandomRecipes = async () => {
     try {
       const response = await axios.get(
-        `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=1&language=es`// Cambia el número de recetas aleatorias
+        `https://api.spoonacular.com/recipes/random?apiKey=${API_KEY}&number=1&language=es` // Cambia el anúmero de recetas aleatorias
       );
 
       const recetasAleatorias = response.data.recipes;
@@ -123,6 +124,7 @@ const Home = () => {
   return (
     <View style={styles.container}>
       {error && <Text style={styles.errorText}>{error}</Text>}
+      <Text style={styles.title}>Recetas Aleatorias</Text>
       <FlatList
         data={randomRecipes}
         keyExtractor={(item) => item.id.toString()}
@@ -177,6 +179,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+
+    color: "#EF5B23",
   },
   errorText: {
     color: "red",

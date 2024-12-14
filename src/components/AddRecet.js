@@ -40,7 +40,7 @@ const AddRecet = ({ route }) => {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
   const [error, setError] = useState(null);
 
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
 
   if (!userId) {
     Alert.alert("Error", "No se pudo obtener el usuario logueado");

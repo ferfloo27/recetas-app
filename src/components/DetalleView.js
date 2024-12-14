@@ -1,20 +1,33 @@
 // screens/SecondScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, use } from "react";
 import axios from "axios";
-import { View, Text, Image, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { useRoute } from "@react-navigation/native";
+import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { auth, db } from "../../firebase-config";
+import { doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 
 export default function DetalleView() {
   const route = useRoute();
   const { recipeId } = route.params;
   const [recipe, setRecipe] = useState(null);
   const [ingredientes, setIngredientes] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const userId = auth.currentUser?.uid;
 
   const navigation = useNavigation();
 
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
 
   // Función para traducir texto usando Google Translate
@@ -69,18 +82,83 @@ export default function DetalleView() {
     obtenerDetalles();
   }, [recipeId]);
 
+  const toggleFavorite = async () => {
+    const user = userId; // Obtén el usuario actual
+    if (!user) {
+      Alert.alert("Error", "Debes iniciar sesión para agregar favoritos.");
+      return;
+    }
+    // UID del usuario actual
+    const recipeId = recipe.id.toString();
+    const docRef = doc(db, "users", userId, "favorites", recipeId); // Ruta de Firestore
+
+    try {
+      if (favorites[recipeId]) {
+        // Eliminar de favoritos
+        await deleteDoc(docRef);
+        Alert.alert("Eliminado de favoritos", `${recipe.title} eliminado.`);
+      } else {
+        // Agregar a favoritos
+        await setDoc(docRef, {
+          id: recipe.id,
+          title: recipe.title,
+          image: recipe.image,
+        });
+        Alert.alert("Agregado a favoritos", `${recipe.title} agregado.`);
+      }
+
+      // Actualizar estado local
+      setFavorites((prev) => ({ ...prev, [recipeId]: !prev[recipeId] }));
+    } catch (error) {
+      console.error("Error al manejar favorito:", error);
+      Alert.alert("Error", "No se pudo actualizar el favorito.");
+    }
+  };
+
+  useEffect(() => {
+    const checkIfFavorite = async (recipeId) => {
+      const user = auth.currentUser;
+      if (!user) return false; // Si el usuario no está autenticado, no puede tener favoritos
+
+      const userId = user.uid;
+      const docRef = doc(db, "users", userId, "favorites", recipeId.toString());
+
+      try {
+        const docSnap = await getDoc(docRef);
+        console.log("docSnap.exists()", docSnap.exists());
+        if (docSnap.exists()) {
+          setIsFavorite(true);
+        } else {
+          setIsFavorite(false);
+        }
+      } catch (error) {
+        console.error("Error checking favorite:", error);
+      }
+    };
+
+    checkIfFavorite(recipeId);
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* Contenido principal */}
       <ScrollView contentContainerStyle={styles.content}>
         {/* Título y favorito */}
-        <Text style={styles.title}>{recipe?.title}</Text>
-        <FontAwesome
-          name="heart-o"
-          size={24}
-          color="gray"
-          style={styles.favoriteIcon}
-        />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>{recipe?.title}</Text>
+          <Pressable
+            onPress={() => toggleFavorite()}
+            accessibilityLabel={
+              isFavorite ? "Eliminar de favoritos" : "Agregar a favoritos"
+            }
+          >
+            <MaterialIcons
+              name={isFavorite ? "favorite" : "favorite-border"}
+              size={28}
+              color={isFavorite ? "red" : "gray"}
+            />
+          </Pressable>
+        </View>
 
         {/* Imagen */}
         <Image
@@ -156,6 +234,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#EF5B23",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 50,
     marginBottom: 10,
   },
   favoriteIcon: {

@@ -28,7 +28,7 @@ const Buscador = () => {
   const [debounceTimeout, setDebounceTimeout] = useState(null);
 
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
 
   // Función para traducir texto usando Google Translate
   const translateText = async (text, sourceLang, targetLang) => {
