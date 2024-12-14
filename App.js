@@ -14,144 +14,162 @@ import DetalleIngrediente from "./src/components/DetalleIngrediente";
 import ProfileView from "./src/components/ProfileView";
 import AddRecet from "./src/components/AddRecet";
 const Stack = createStackNavigator();
+import { MenuProvider } from "./src/components/MenuContext";
+import Register from "./src/components/Register";
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="light" backgroundColor="#EF5B23" />
-      <Stack.Navigator initialRouteName="Login">
-        {/* Pantalla de Login */}
-        <Stack.Screen
-          name="Login"
-          component={Login}
-          options={{
-            title: "Login",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-            gestureEnabled: false,
-            headerShown: false,
-          }}
-        />
-        {/* Pantalla de Buscador */}
-        <Stack.Screen
-          name="Buscador"
-          component={Buscador}
-          options={{
-            title: "Buscador",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-            headerTitleAlign: "center", // Centra el título del header
-          }}
-        />
-        {/* Pantalla de Detalle de la Receta */}
-        <Stack.Screen
-          name="Detalle de la Receta"
-          component={DetalleView}
-          options={{
-            title: "Detalle de la Receta",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-          }}
-        />
-        <Stack.Screen
-          name="Detalle del ingrediente"
-          component={DetalleIngrediente}
-          options={{
-            title: "Detalle del ingrediente",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-          }}
-        />
+    <MenuProvider>
+      <NavigationContainer>
+        <StatusBar style="light" backgroundColor="#EF5B23" />
+        <Stack.Navigator initialRouteName="Login">
+          {/* Pantalla de Login */}
+          <Stack.Screen
+            name="Login"
+            component={Login}
+            options={{
+              title: "Login",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+              gestureEnabled: false,
+              headerShown: false,
+            }}
+          />
 
-        <Stack.Screen
-          name="Home"
-          component={Home}
-          options={({ navigation }) => ({
-            title: "Inicio",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-            headerTitleAlign: "center", // Centra el título del header
-            headerLeft: () => null, // Esto oculta el botón de retroceso
-            headerRight: () => (
-              <Pressable
-                onPress={() => navigation.navigate("Buscador")} // Usamos navigation aquí
-                style={styles.headerButton}
-              >
-                <FontAwesome name="search" size={24} color="#fff" />
-              </Pressable>
-            ),
-          })}
-        />
-        <Stack.Screen
-          name="Favoritos"
-          component={Favoritos}
-          options={({ navigation }) => ({
-            title: "Favoritos",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-            headerTitleAlign: "center", // Centra el título del header
-            headerLeft: () => null, // Esto oculta el botón de retroceso
-            headerRight: () => (
-              <Pressable
-                onPress={() => navigation.navigate("Buscador")} // Usamos navigation aquí
-                style={styles.headerButton}
-              >
-                <FontAwesome name="search" size={24} color="#fff" />
-              </Pressable>
-            ),
-          })}
-        />
+          <Stack.Screen
+            name="Register"
+            component={Register}
+            options={{
+              title: "Register",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+              gestureEnabled: false,
+              headerShown: false,
+            }}
+          />
 
-        <Stack.Screen
-          name="MenuScreen"
-          component={MenuScreen}
-          options={{
-            title: "Menu",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-          }}
-        />
+          {/* Pantalla de Buscador */}
+          <Stack.Screen
+            name="Buscador"
+            component={Buscador}
+            options={{
+              title: "Buscador",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+              headerTitleAlign: "center", // Centra el título del header
+            }}
+          />
+          {/* Pantalla de Detalle de la Receta */}
+          <Stack.Screen
+            name="Detalle de la Receta"
+            component={DetalleView}
+            options={{
+              title: "Detalle de la Receta",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          />
+          <Stack.Screen
+            name="Detalle del ingrediente"
+            component={DetalleIngrediente}
+            options={{
+              title: "Detalle del ingrediente",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          />
 
-        <Stack.Screen
-          name="AddRecet"
-          component={AddRecet}
-          options={{
-            title: "Agregar Recetas",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-          }}
-        />
+          <Stack.Screen
+            name="Home"
+            component={Home}
+            options={({ navigation }) => ({
+              title: "Inicio",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+              headerTitleAlign: "center", // Centra el título del header
+              headerLeft: () => null, // Esto oculta el botón de retroceso
+              headerRight: () => (
+                <Pressable
+                  onPress={() => navigation.navigate("Buscador")} // Usamos navigation aquí
+                  style={styles.headerButton}
+                >
+                  <FontAwesome name="search" size={24} color="#fff" />
+                </Pressable>
+              ),
+            })}
+          />
+          <Stack.Screen
+            name="Favoritos"
+            component={Favoritos}
+            options={({ navigation }) => ({
+              title: "Favoritos",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+              headerTitleAlign: "center", // Centra el título del header
+              headerLeft: () => null, // Esto oculta el botón de retroceso
+              headerRight: () => (
+                <Pressable
+                  onPress={() => navigation.navigate("Buscador")} // Usamos navigation aquí
+                  style={styles.headerButton}
+                >
+                  <FontAwesome name="search" size={24} color="#fff" />
+                </Pressable>
+              ),
+            })}
+          />
 
-        <Stack.Screen
-          name="MealDetail"
-          component={MealDetail}
-          options={{
-            title: "Detalle del Menu",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-          }}
-        />
-        <Stack.Screen
-          name="ProfileView"
-          component={ProfileView}
-          options={{
-            title: "Perfil",
-            headerStyle: { backgroundColor: "#FF931E" },
-            headerTintColor: "#fff",
-            headerTitleStyle: { fontWeight: "bold" },
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen
+            name="MenuScreen"
+            component={MenuScreen}
+            options={{
+              title: "Menu",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          />
+
+          <Stack.Screen
+            name="AddRecet"
+            component={AddRecet}
+            options={{
+              title: "Agregar Recetas",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          />
+
+          <Stack.Screen
+            name="MealDetail"
+            component={MealDetail}
+            options={{
+              title: "Detalle del Menu",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          />
+          <Stack.Screen
+            name="ProfileView"
+            component={ProfileView}
+            options={{
+              title: "Perfil",
+              headerStyle: { backgroundColor: "#FF931E" },
+              headerTintColor: "#fff",
+              headerTitleStyle: { fontWeight: "bold" },
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </MenuProvider>
   );
 }
 

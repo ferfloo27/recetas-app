@@ -116,13 +116,20 @@ const MealDetail = ({ route }) => {
           data={recipes}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.recipeItem}>
+            <Pressable
+              style={styles.recipeItem}
+              onPress={() =>
+                navigation.navigate("Detalle de la Receta", {
+                  recipeId: item.id,
+                })
+              }
+            >
               <Image
                 source={{ uri: item.imageUrl }}
                 style={styles.recipeImage}
               />
               <Text style={styles.recipeTitle}>{item.recipeName}</Text>
-            </View>
+            </Pressable>
           )}
         />
       )}

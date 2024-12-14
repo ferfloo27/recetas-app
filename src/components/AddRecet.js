@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { MaterialIcons } from "@expo/vector-icons"; // Importa el ícono de Ionicons
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
 
 // Función para generar la fecha en formato dinámico "YYYY-MM-DD"
 const getFormattedDate = () => {
@@ -39,23 +40,54 @@ const AddRecet = ({ route }) => {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
   const [error, setError] = useState(null);
 
+  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+
   if (!userId) {
     Alert.alert("Error", "No se pudo obtener el usuario logueado");
     return null;
   }
 
+  const dailyMenuRef = doc(db, `users/${userId}/dailyMenu/${date}`);
   // Referencia al documento del tipo de comida
-  const comidasRef = collection(
-    db,
-    `users/${userId}/dailyMenu/${date}/comidas`
-  );
+  const comidasRef = collection(dailyMenuRef, "comidas");
   const mealDocRef = doc(comidasRef, mealName); // Documento específico del mealType
 
   // Inicializar el documento del tipo de comida si no existe
   const initializeMealDoc = async () => {
     try {
-      const snapshot = await getDoc(mealDocRef);
-      if (!snapshot.exists()) {
+      const snapshot = await getDoc(dailyMenuRef);
+      if (snapshot.exists()) {
+        const dailyMenuData = snapshot.data();
+        if (!dailyMenuData.nutrientes) {
+          await updateDoc(dailyMenuRef, {
+            nutrientes: {
+              carbohydrates: 0,
+              protein: 0,
+              fat: 0,
+            },
+          });
+        } else {
+          console.log(
+            "Documento dailyMenu ya inicializado con el campo nutrientes."
+          );
+        }
+        // Crear el documento principal con nutrientes
+      } else {
+        await setDoc(dailyMenuRef, {
+          nutrientes: {
+            carbohydrates: 0,
+            protein: 0,
+            fat: 0,
+          },
+        });
+        console.log("Documento dailyMenu creado con el campo nutrientes.");
+      }
+
+      // Verificar si el documento del tipo de comida ya existe
+      const mealSnapshot = await getDoc(mealDocRef);
+
+      if (!mealSnapshot.exists()) {
+        // Crear el documento para el tipo de comida
         await setDoc(mealDocRef, { recetas: [] }); // Crear el documento vacío
         console.log(`Documento creado para ${mealName}`);
       }
@@ -150,6 +182,60 @@ const AddRecet = ({ route }) => {
       const snapshot = await getDoc(mealDocRef);
       const data = snapshot.exists() ? snapshot.data() : { recetas: [] };
 
+      const response = await axios.get(
+        `https://api.spoonacular.com/recipes/${favoriteRecipe.id}/information?apiKey=${API_KEY}&includeNutrition=true`
+      );
+
+      const recetas = response.data;
+
+      const nutrientesDeseados = ["Carbohydrates", "Protein", "Fat"]; // Añade aquí los nutrientes que necesitas
+      const nutrientesSeleccionados = recetas.nutrition.nutrients
+        .filter((nutriente) => nutrientesDeseados.includes(nutriente.name))
+        .map((nutriente) => ({
+          name: nutriente.name,
+          amount: nutriente.amount,
+        }));
+
+      const food = {
+        // Usamos el título de la receta favorita
+        carbohydrates:
+          nutrientesSeleccionados.find(
+            (nutriente) => nutriente.name === "Carbohydrates"
+          )?.amount || 0,
+        protein:
+          nutrientesSeleccionados.find(
+            (nutriente) => nutriente.name === "Protein"
+          )?.amount || 0,
+        fat:
+          nutrientesSeleccionados.find((nutriente) => nutriente.name === "Fat")
+            ?.amount || 0,
+      };
+
+      const snapshotNutrients = await getDoc(dailyMenuRef);
+      if (snapshotNutrients.exists()) {
+        const dailyMenuData = snapshotNutrients.data();
+        if (dailyMenuData.nutrientes) {
+          const nutrientsData = dailyMenuData.nutrientes;
+          // Sumar los nutrientes de la receta a los nutrientes totales
+          const updatedNutrients = {
+            carbohydrates: nutrientsData.carbohydrates + food.carbohydrates,
+            protein: nutrientsData.protein + food.protein,
+            fat: nutrientsData.fat + food.fat,
+          };
+
+          // Actualizar los nutrientes totales en Firestore
+          await setDoc(
+            dailyMenuRef,
+            { nutrientes: updatedNutrients },
+            { merge: true }
+          );
+
+          console.log(
+            "Nutrientes actualizados en Firestore:",
+            updatedNutrients
+          );
+        }
+      }
       // Crear una nueva lista de recetas con la receta añadida
       const updatedRecipes = [
         ...data.recetas,

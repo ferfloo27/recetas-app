@@ -3,9 +3,26 @@ import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import BottomNav from "./BottomNav";
 import { useNavigation } from "@react-navigation/native";
+import { db, auth } from "../../firebase-config";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { parse } from "react-native-svg";
+
+// Función para generar la fecha en formato dinámico "YYYY-MM-DD"
+const getFormattedDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0"); // Mes en formato 2 dígitos
+  const day = String(today.getDate()).padStart(2, "0"); // Día en formato 2 dígitos
+  return `${year}-${month}-${day}`;
+};
 
 const MenuScreen = () => {
   const navigation = useNavigation();
+
+  const userId = auth.currentUser?.uid;
+  const date = getFormattedDate();
 
   // Datos simulados para las comidas
   const meals = [
@@ -14,7 +31,7 @@ const MenuScreen = () => {
     { id: "3", name: "Cena" },
   ];
 
-  const getFormattedDate = () => {
+  const getFormattedDateMenu = () => {
     const date = new Date();
     const months = [
       "enero",
@@ -35,23 +52,59 @@ const MenuScreen = () => {
     return `${day} de ${month}`;
   };
 
+  const dailyMenuRefNutrients = doc(db, `users/${userId}/dailyMenu/${date}`);
+
+  const [nutrientTotals, setNutrientTotals] = useState({
+    carbohydrates: 0,
+    protein: 0,
+    fat: 0,
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchNutrients = async () => {
+        try {
+          const snapshot = await getDoc(dailyMenuRefNutrients);
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (data.nutrientes) {
+              setNutrientTotals(data.nutrientes);
+            }
+          } else {
+            console.log("No se encontró el documento");
+          }
+        } catch (error) {
+          console.error("Error al obtener los nutrientes:", error);
+        }
+      };
+
+      fetchNutrients();
+    }, []) // Sin dependencias, se ejecutará cada vez que la pantalla esté activa
+  );
+
   return (
     <View style={styles.container}>
       {/* Cabecera con el título y fecha */}
       <View style={styles.header}>
         <Text style={styles.title}>Diario</Text>
-        <Text style={styles.date}>{`< ${getFormattedDate()} >`}</Text>
+        <Text style={styles.date}>{`< ${getFormattedDateMenu()} >`}</Text>
         <View style={styles.nutritionSummary}>
           <View style={styles.nutrientBox}>
-            <Text style={styles.nutrientValue}>0 gr</Text>
+            <Text style={styles.nutrientValue}>
+              {parseFloat(nutrientTotals.carbohydrates).toFixed(2)} gr
+            </Text>
             <Text style={styles.nutrientName}>Carbo</Text>
           </View>
           <View style={styles.nutrientBox}>
-            <Text style={styles.nutrientValue}>0 gr</Text>
+            <Text style={styles.nutrientValue}>
+              {parseFloat(nutrientTotals.protein).toFixed(2)} gr
+            </Text>
             <Text style={styles.nutrientName}>Proteínas</Text>
           </View>
           <View style={styles.nutrientBox}>
-            <Text style={styles.nutrientValue}>0 gr</Text>
+            <Text style={styles.nutrientValue}>
+              {parseFloat(nutrientTotals.fat).toFixed(2)} gr
+            </Text>
             <Text style={styles.nutrientName}>Grasas</Text>
           </View>
         </View>

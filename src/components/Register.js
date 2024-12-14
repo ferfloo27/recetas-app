@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,42 +7,50 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
-import { doc, setDoc, collection } from "firebase/firestore"; // Importamos Firestore
-import { auth, db } from "../../firebase-config"; // Importamos configuración de Firebase
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, collection } from "firebase/firestore";
+import { auth, db } from "../../firebase-config";
 import { useNavigation } from "@react-navigation/native";
 import { FontAwesome } from "@expo/vector-icons";
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setPasswordVisible] = useState(true);
   const navigation = useNavigation();
 
-  const handleLogin = () => {
+  const handleCreateAccount = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Por favor, complete todos los campos.");
       return;
     }
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log("Sesión iniciada con el correo:", user.email);
-        Alert.alert("Inicio de sesión", `¡Bienvenido, ${user.email}!`);
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Home" }], // Reinicia la pila con Home como la única pantalla
-        });
-      })
-      .catch((error) => {
-        console.log("Error al iniciar sesión:", error.message);
-        handleAuthError(error.code);
+    if (password.length < 6) {
+      Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
+        email: email,
+        createdAt: new Date(),
       });
+
+      setEmail("");
+      setPassword("");
+      Alert.alert("Cuenta creada", `¡Bienvenido, ${user.email}!`);
+    } catch (error) {
+      console.log("Error al crear la cuenta:", error.message);
+      handleAuthError(error.code);
+    }
   };
 
   const handleAuthError = (errorCode) => {
@@ -74,10 +83,7 @@ const Login = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Inicio de Sesión</Text>
-      <Text style={styles.subtitle}>
-        Ingresa tus credenciales para iniciar sesión.
-      </Text>
+      <Text style={styles.title}>Crear cuenta</Text>
       <Text style={styles.label}>Correo electrónico: </Text>
       <View style={styles.inputContainer}>
         <FontAwesome
@@ -121,23 +127,18 @@ const Login = () => {
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={handleLogin}
-        style={({ pressed }) => [
-          styles.button,
-          pressed && styles.buttonPressed, // Cambia el estilo cuando está presionado
-        ]}
-      >
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
+      <Pressable onPress={handleCreateAccount} style={styles.button}>
+        <Text style={styles.buttonText}>Registrarse</Text>
       </Pressable>
+
       <View style={styles.registerContainer}>
-        <Text style={styles.buttonTextRegister}>¿No tienes una cuenta?</Text>
+        <Text style={styles.buttonTextRegister}>¿Ya tienes una cuenta?</Text>
         <Pressable
           onPress={() =>
-            navigation.reset({ index: 0, routes: [{ name: "Register" }] })
+            navigation.reset({ index: 0, routes: [{ name: "Login" }] })
           }
         >
-          <Text style={styles.buttonTextRegister2}>Registrate aqui</Text>
+          <Text style={styles.buttonTextRegister2}>Inicia sesión</Text>
         </Pressable>
       </View>
     </View>
@@ -226,4 +227,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default Register;

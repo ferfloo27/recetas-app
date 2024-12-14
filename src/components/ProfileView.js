@@ -1,7 +1,8 @@
 import React, { useContext } from "react";
-import { View, Text, StyleSheet, Button, Alert } from "react-native";
+import { View, Text, StyleSheet, Button, Alert, Pressable } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
+import { FontAwesome } from "@expo/vector-icons";
 // Ajusta la ruta según tu estructura
 
 const ProfileView = () => {
@@ -38,10 +39,15 @@ const ProfileView = () => {
 
   return (
     <View style={styles.container}>
+      <FontAwesome name="user-circle" size={100} color="#FF931E" />
       <Text style={styles.title}>Perfil del Usuario</Text>
       <Text style={styles.label}>Email:</Text>
       <Text style={styles.email}>{user?.email || "No disponible"}</Text>
-      <Button title="Cerrar sesión" onPress={handleLogout} color="#ff5c5c" />
+      <View style={styles.button}>
+        <Pressable title="Cerrar sesión" onPress={handleLogout}>
+          <Text style={styles.buttonText}>Cerrar sesión</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -51,22 +57,47 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "center",
     padding: 20,
     backgroundColor: "#f9f9f9",
+    width: "80%",
+    marginVertical: 100,
+
+    borderRadius: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    marginTop: 20,
   },
   label: {
-    fontSize: 18,
-    color: "#555",
+    fontSize: 20,
+    color: "black",
+    fontWeight: "bold",
+    alignSelf: "flex-start",
   },
   email: {
     fontSize: 16,
     color: "#333",
     marginBottom: 40,
+    alignSelf: "flex-start",
+  },
+  button: {
+    backgroundColor: "#ff5c5c",
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonPressed: {
+    backgroundColor: "#3700B3", // Cambia a un color más oscuro al presionarlo
+    transform: [{ scale: 0.95 }], // Reduce ligeramente el tamaño
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 
