@@ -22,8 +22,10 @@ export default function DetalleView() {
   const { recipeId } = route.params;
   const [recipe, setRecipe] = useState(null);
   const [ingredientes, setIngredientes] = useState([]);
+  const [favorites, setFavorites] = useState({});
   const [isFavorite, setIsFavorite] = useState(false);
   const userId = auth.currentUser?.uid;
+  const [steps, setSteps] = useState([]);
 
   const navigation = useNavigation();
 
@@ -74,6 +76,22 @@ export default function DetalleView() {
         );
 
         setIngredientes(translatedIngredients || []);
+
+        // Traducimos los pasos (analyzedInstructions)
+        const translatedSteps =
+          recetas.analyzedInstructions?.flatMap((instruction) =>
+            instruction.steps.map(async (step) => {
+              const translatedStep = await translateText(step.step, "en", "es");
+              return { ...step, step: translatedStep };
+            })
+          ) || [];
+
+        // Resolvemos las promesas para obtener los pasos traducidos
+        const resolvedSteps = await Promise.all(translatedSteps);
+
+        setSteps(resolvedSteps); // Asignamos los pasos traducidos a un estado
+        console.log("steps", steps);
+        setFavorites((prev) => ({ ...prev, [recipeId]: isFavorite }));
       } catch (error) {
         console.error("Error fetching recipe details:", error);
       }
@@ -135,9 +153,8 @@ export default function DetalleView() {
         console.error("Error checking favorite:", error);
       }
     };
-
     checkIfFavorite(recipeId);
-  }, []);
+  }, [favorites, recipeId]);
 
   return (
     <View style={styles.container}>
@@ -192,12 +209,16 @@ export default function DetalleView() {
 
         {/* Preparación */}
         <Text style={styles.sectionTitle}>Preparación:</Text>
-        <Text style={styles.preparationText}>
-          En una sartén ponemos el aceite de oliva y dejamos que caliente un
-          poco. Luego añadimos los huevos al sartén y batimos con calma a medida
-          que se vayan cociendo. Cuando tengan la consistencia deseada se retira
-          del fuego y se añade la sal y pimienta.
-        </Text>
+        {steps.length > 0 ? (
+          steps.map((step, index) => (
+            <View key={index} style={styles.stepContainer}>
+              <Text style={styles.stepNumber}>{index + 1}</Text>
+              <Text style={styles.stepText}>{step.step}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.stepText}>Pasos no disponibles.</Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -229,8 +250,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
   },
+  stepContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginBottom: 5,
+    fontSize: 16,
+    color: "black",
+  },
+  stepNumber: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#EF5B23",
+    marginRight: 10,
+  },
+  stepText: {
+    fontSize: 16,
+    color: "black",
+  },
   title: {
     fontSize: 24,
+    flex: 1,
     fontWeight: "bold",
     color: "#EF5B23",
     textAlign: "center",
@@ -239,9 +278,6 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 50,
-    marginBottom: 10,
   },
   favoriteIcon: {
     position: "absolute",

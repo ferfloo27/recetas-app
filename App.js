@@ -15,6 +15,7 @@ import ProfileView from "./src/components/ProfileView";
 import AddRecet from "./src/components/AddRecet";
 const Stack = createStackNavigator();
 import Register from "./src/components/Register";
+import BuscadorPorCategoria from "./src/components/BuscadorPorCategoria";
 
 export default function App() {
   return (
@@ -52,6 +53,18 @@ export default function App() {
         <Stack.Screen
           name="Buscador"
           component={Buscador}
+          options={{
+            title: "Buscador",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+            headerTitleAlign: "center", // Centra el título del header
+          }}
+        />
+
+        <Stack.Screen
+          name="BuscadorPorCategoria"
+          component={BuscadorPorCategoria}
           options={{
             title: "Buscador",
             headerStyle: { backgroundColor: "#FF931E" },
@@ -137,12 +150,12 @@ export default function App() {
         <Stack.Screen
           name="AddRecet"
           component={AddRecet}
-          options={{
+          options={({ navigation }) => ({
             title: "Agregar Recetas",
             headerStyle: { backgroundColor: "#FF931E" },
             headerTintColor: "#fff",
             headerTitleStyle: { fontWeight: "bold" },
-          }}
+          })}
         />
 
         <Stack.Screen

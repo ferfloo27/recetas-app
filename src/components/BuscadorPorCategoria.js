@@ -11,14 +11,26 @@ import {
 } from "react-native";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { auth, db } from "../../firebase-config";
-import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, getDoc, collection } from "firebase/firestore";
 
-const Buscador = () => {
+// Función para generar la fecha en formato dinámico "YYYY-MM-DD"
+const getFormattedDate = () => {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0"); // Mes en formato 2 dígitos
+  const day = String(today.getDate()).padStart(2, "0"); // Día en formato 2 dígitos
+  return `${year}-${month}-${day}`;
+};
+
+const BuscadorPorCategoria = () => {
   const navigation = useNavigation();
   const [query, setQuery] = useState("");
+  const route = useRoute();
+  const { mealName } = route.params;
   const [recetas, setRecetas] = useState([]);
   const [recetasPorIngredientes, setRecetasPorIngredientes] = useState([]);
   const [recetasPorAlgunosIngredientes, setRecetasPorAlgunosIngredientes] =
@@ -31,6 +43,7 @@ const Buscador = () => {
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favorites, setFavorites] = useState({});
+  const [recipes, setRecipes] = useState([]);
 
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
   const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
@@ -229,6 +242,133 @@ const Buscador = () => {
     }
   };
 
+  const isRecipeAdded = (recipeId) => {
+    return recipes.some((r) => r.id === recipeId);
+  };
+
+  const handleAddFavoriteToMeal = async (favoriteRecipe) => {
+    if (isRecipeAdded(favoriteRecipe.id)) {
+      Alert.alert("Advertencia", "Esta receta ya está añadida.");
+      return;
+    }
+    try {
+      const snapshot = await getDoc(mealDocRef);
+      const data = snapshot.exists() ? snapshot.data() : { recetas: [] };
+
+      const response = await axios.get(
+        `https://api.spoonacular.com/recipes/${favoriteRecipe.id}/information?apiKey=${API_KEY}&includeNutrition=true`
+      );
+
+      const recetas = response.data;
+
+      const nutrientesDeseados = ["Carbohydrates", "Protein", "Fat"]; // Añade aquí los nutrientes que necesitas
+      const nutrientesSeleccionados = recetas.nutrition.nutrients
+        .filter((nutriente) => nutrientesDeseados.includes(nutriente.name))
+        .map((nutriente) => ({
+          name: nutriente.name,
+          amount: nutriente.amount,
+        }));
+
+      const food = {
+        // Usamos el título de la receta favorita
+        carbohydrates:
+          nutrientesSeleccionados.find(
+            (nutriente) => nutriente.name === "Carbohydrates"
+          )?.amount || 0,
+        protein:
+          nutrientesSeleccionados.find(
+            (nutriente) => nutriente.name === "Protein"
+          )?.amount || 0,
+        fat:
+          nutrientesSeleccionados.find((nutriente) => nutriente.name === "Fat")
+            ?.amount || 0,
+      };
+
+      const snapshotNutrients = await getDoc(dailyMenuRef);
+      if (snapshotNutrients.exists()) {
+        const dailyMenuData = snapshotNutrients.data();
+        if (dailyMenuData.nutrientes) {
+          const nutrientsData = dailyMenuData.nutrientes;
+          // Sumar los nutrientes de la receta a los nutrientes totales
+          const updatedNutrients = {
+            carbohydrates: nutrientsData.carbohydrates + food.carbohydrates,
+            protein: nutrientsData.protein + food.protein,
+            fat: nutrientsData.fat + food.fat,
+          };
+
+          // Actualizar los nutrientes totales en Firestore
+          await setDoc(
+            dailyMenuRef,
+            { nutrientes: updatedNutrients },
+            { merge: true }
+          );
+
+          console.log(
+            "Nutrientes actualizados en Firestore:",
+            updatedNutrients
+          );
+        }
+      }
+      // Crear una nueva lista de recetas con la receta añadida
+      const updatedRecipes = [
+        ...data.recetas,
+        {
+          id: favoriteRecipe.id,
+          recipeName: favoriteRecipe.title, // Usamos el título de la receta favorita
+          imageUrl: favoriteRecipe.image || "https://via.placeholder.com/150",
+        },
+      ];
+
+      // Actualizar Firestore
+      await setDoc(mealDocRef, { recetas: updatedRecipes }, { merge: true });
+
+      // Actualizar el estado local de recipes
+      setRecipes(updatedRecipes);
+
+      // Actualizar el estado de favoriteRecipes para eliminar la receta añadida
+      /*setFavoriteRecipes((prevFavorites) =>
+        prevFavorites.filter((recipe) => recipe.id !== favoriteRecipe.id)
+      );*/
+
+      Alert.alert("Éxito", `${favoriteRecipe.title} añadida a ${mealName}`);
+    } catch (error) {
+      Alert.alert("Error", "No se pudo añadir la receta");
+      console.error(error);
+    }
+  };
+
+  const userId = auth.currentUser?.uid; // ID del usuario logueado
+  const date = getFormattedDate(); // Fecha actual formateada dinámicamente
+
+  const dailyMenuRef = doc(db, `users/${userId}/dailyMenu/${date}`);
+  // Referencia al documento del tipo de comida
+  const comidasRef = collection(dailyMenuRef, "comidas");
+  const mealDocRef = doc(comidasRef, mealName); // Documento específico del mealType
+
+  // Obtener recetas desde Firestore
+  const fetchRecipes = async () => {
+    try {
+      const snapshot = await getDoc(mealDocRef);
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        const fetchedRecipes = data.recetas || []; // Recuperamos el campo 'recetas'
+        setRecipes(fetchedRecipes);
+      } else {
+        setRecipes([]); // Si no existe el documento, inicializamos vacío
+      }
+    } catch (error) {
+      Alert.alert("Error", "No se pudieron cargar las recetas");
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const initializeAndFetch = async () => {
+      fetchRecipes(); // Cargar recetas
+    };
+    initializeAndFetch();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
@@ -260,21 +400,18 @@ const Buscador = () => {
           >
             <Image source={{ uri: item.image }} style={styles.recipeImage} />
             <Text style={styles.recipeTitle}>{item.title}</Text>
-            <Pressable
-              onPress={() => toggleFavorite(item)}
-              accessibilityLabel={
-                favorites[item.id]
-                  ? "Eliminar de favoritos"
-                  : "Agregar a favoritos"
-              }
-              style={styles.favoriteButton}
-            >
-              <MaterialIcons
-                name={favorites[item.id] ? "favorite" : "favorite-border"}
-                size={28}
-                color={favorites[item.id] ? "red" : "gray"}
-              />
-            </Pressable>
+            {isRecipeAdded(item.id) ? (
+              // Ícono verde si la receta ya está añadida
+              <MaterialIcons name="check-circle" size={32} color="green" />
+            ) : (
+              // Ícono de añadir si no está añadida
+              <Pressable
+                style={styles.addIconButton}
+                onPress={() => handleAddFavoriteToMeal(item)}
+              >
+                <MaterialIcons name="add-circle" size={32} color="#EF5B23" />
+              </Pressable>
+            )}
           </Pressable>
         )}
       />
@@ -421,4 +558,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Buscador;
+export default BuscadorPorCategoria;

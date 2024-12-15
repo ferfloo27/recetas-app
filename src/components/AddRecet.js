@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  use,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import {
   View,
   Text,
@@ -17,8 +23,13 @@ import {
   setDoc,
   collection,
 } from "firebase/firestore";
-import { MaterialIcons } from "@expo/vector-icons"; // Importa el ícono de Ionicons
-import { useNavigation } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons"; // Importa el ícono de Ionicons
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import axios from "axios";
 
 // Función para generar la fecha en formato dinámico "YYYY-MM-DD"
@@ -30,22 +41,53 @@ const getFormattedDate = () => {
   return `${year}-${month}-${day}`;
 };
 
-const AddRecet = ({ route }) => {
+const AddRecet = () => {
   const navigation = useNavigation();
-  const { mealName } = route.params; // Tipo de comida: "Desayuno", "Almuerzo", etc.
+  const route = useRoute();
+  const { mealName } = route.params || {}; // Tipo de comida: "Desayuno", "Almuerzo", etc.
   const [recipes, setRecipes] = useState([]);
   const userId = auth.currentUser?.uid; // ID del usuario logueado
   const date = getFormattedDate(); // Fecha actual formateada dinámicamente
 
   const [favoriteRecipes, setFavoriteRecipes] = useState([]); // Estado para las recetas favoritas
   const [error, setError] = useState(null);
+  const [mealRecipes, setMealRecipes] = useState([]);
 
   const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
+  const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
+
+  // Función para traducir texto usando Google Translate
+  const translateText = async (text, sourceLang, targetLang) => {
+    try {
+      const response = await axios.post(
+        `https://translation.googleapis.com/language/translate/v2?key=${API_KEY_GOOGLE}&q=${text}&source=${sourceLang}&target=${targetLang}`
+      );
+      return response.data.data.translations[0].translatedText;
+    } catch (error) {
+      console.error("Error translating text:", error);
+      return text; // Devuelve el texto original si hay un error
+    }
+  };
 
   if (!userId) {
     Alert.alert("Error", "No se pudo obtener el usuario logueado");
     return null;
   }
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          onPress={() =>
+            navigation.navigate("BuscadorPorCategoria", { mealName })
+          }
+          style={{ marginRight: 10 }}
+        >
+          <FontAwesome name="search" size={24} color="#fff" />
+        </Pressable>
+      ),
+    }); // Llama a la función para inicializar el documento del tipo de comida
+  }, []);
 
   const dailyMenuRef = doc(db, `users/${userId}/dailyMenu/${date}`);
   // Referencia al documento del tipo de comida
@@ -264,6 +306,59 @@ const AddRecet = ({ route }) => {
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const getRecipesByCategory = async (category) => {
+        const randomOffset = Math.floor(Math.random() * 450);
+        const url = `https://api.spoonacular.com/recipes/complexSearch?type=${category}&number=2&offset=${randomOffset}&apiKey=${API_KEY}`;
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          console.log(randomOffset);
+
+          if (data.results) {
+            console.log("Recetas encontradas:", data.results);
+
+            const recetas = data.results;
+
+            // Paso 3: Traduce los títulos de las recetas de inglés a español
+            const translatedRecipes = await Promise.all(
+              recetas.map(async (recipe) => {
+                const translatedTitle = await translateText(
+                  recipe.title,
+                  "en",
+                  "es"
+                );
+                return { ...recipe, title: translatedTitle };
+              })
+            );
+
+            return translatedRecipes; // Devuelve las recetas
+          } else {
+            console.error("No se encontraron recetas.");
+            return [];
+          }
+        } catch (error) {
+          console.error("Error al obtener recetas:", error);
+          return [];
+        }
+      };
+
+      if (mealName === "Desayuno") {
+        getRecipesByCategory("breakfast").then((recipes) => {
+          setMealRecipes(recipes);
+          console.log("Recetas obtenidas:", recipes);
+        });
+      } else if (mealName === "Almuerzo" || mealName === "Cena") {
+        getRecipesByCategory("main course").then((recipes) => {
+          setMealRecipes(recipes);
+          console.log("Recetas obtenidas:", recipes);
+        });
+      }
+    }, [mealName])
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{mealName}</Text>
@@ -272,68 +367,124 @@ const AddRecet = ({ route }) => {
           No tienes recetas favoritas guardadas.
         </Text>
       ) : (
-        <FlatList
-          data={favoriteRecipes} // Las recetas favoritas ya filtradas
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.recipeItem}
-              onPress={() =>
-                navigation.navigate("Detalle de la Receta", {
-                  recipeId: item.id,
-                })
-              }
-            >
-              <Image
-                source={{ uri: item.image || "https://via.placeholder.com/80" }}
-                style={styles.recipeImage}
-              />
-
-              <Text style={styles.recipeTitle}>{item.title}</Text>
-              {isRecipeAdded(item.id) ? (
-                // Ícono verde si la receta ya está añadida
-                <MaterialIcons name="check-circle" size={32} color="green" />
-              ) : (
-                // Ícono de añadir si no está añadida
+        <View>
+          <Text style={styles.subtitle}>Recetas Favoritas:</Text>
+          <View style={styles.recipeList}>
+            <FlatList
+              data={favoriteRecipes} // Las recetas favoritas ya filtradas
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
                 <Pressable
-                  style={styles.addIconButton}
-                  onPress={() => handleAddFavoriteToMeal(item)}
+                  style={styles.recipeItem}
+                  onPress={() =>
+                    navigation.navigate("Detalle de la Receta", {
+                      recipeId: item.id,
+                    })
+                  }
                 >
-                  <MaterialIcons name="add-circle" size={32} color="#EF5B23" />
+                  <Image
+                    source={{
+                      uri: item.image || "https://via.placeholder.com/80",
+                    }}
+                    style={styles.recipeImage}
+                  />
+
+                  <Text style={styles.recipeTitle}>{item.title}</Text>
+                  {isRecipeAdded(item.id) ? (
+                    // Ícono verde si la receta ya está añadida
+                    <MaterialIcons
+                      name="check-circle"
+                      size={32}
+                      color="green"
+                    />
+                  ) : (
+                    // Ícono de añadir si no está añadida
+                    <Pressable
+                      style={styles.addIconButton}
+                      onPress={() => handleAddFavoriteToMeal(item)}
+                    >
+                      <MaterialIcons
+                        name="add-circle"
+                        size={32}
+                        color="#EF5B23"
+                      />
+                    </Pressable>
+                  )}
                 </Pressable>
               )}
-            </Pressable>
-          )}
-          initialNumToRender={5}
-          windowSize={10}
-        />
-      )}
-      {
-        // Listado de recetas
-        /*<FlatList
-        data={recipes}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.recipeCard}>
-            <Image source={{ uri: item.imageUrl }} style={styles.image} />
-            <Text style={styles.recipeName}>{item.recipeName}</Text>
-            <Pressable
-              style={styles.deleteButton}
-              onPress={() => deleteRecipe(index)}
-            >
-              <Text style={styles.deleteText}>Eliminar</Text>
-            </Pressable>
+              initialNumToRender={5}
+              windowSize={10}
+            />
           </View>
-        )}
-      />*/
-      }
+        </View>
+      )}
+
+      {mealRecipes.length === 0 ? (
+        <Text style={styles.noFavoritesText}>No hay recetas disponibles.</Text>
+      ) : (
+        <View>
+          <Text style={styles.subtitle}>Recetas para el {mealName}:</Text>
+          <View>
+            <FlatList
+              data={mealRecipes}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={styles.recipeItem}
+                  onPress={() =>
+                    navigation.navigate("Detalle de la Receta", {
+                      recipeId: item.id,
+                    })
+                  }
+                >
+                  <Image
+                    source={{
+                      uri: item.image || "https://via.placeholder.com/80",
+                    }}
+                    style={styles.recipeImage}
+                  />
+                  <Text style={styles.recipeTitle}>{item.title}</Text>
+
+                  {isRecipeAdded(item.id) ? (
+                    // Ícono verde si la receta ya está añadida
+                    <MaterialIcons
+                      name="check-circle"
+                      size={32}
+                      color="green"
+                    />
+                  ) : (
+                    // Ícono de añadir si no está añadida
+                    <Pressable
+                      style={styles.addIconButton}
+                      onPress={() => handleAddFavoriteToMeal(item)}
+                    >
+                      <MaterialIcons
+                        name="add-circle"
+                        size={32}
+                        color="#EF5B23"
+                      />
+                    </Pressable>
+                  )}
+                </Pressable>
+              )}
+              initialNumToRender={5}
+              windowSize={10}
+            />
+          </View>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#FDF7F2" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 16 },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#EF5B23",
+  },
   recipeCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -349,6 +500,12 @@ const styles = StyleSheet.create({
   },
   recipeName: { flex: 1, fontSize: 16 },
   image: { width: 50, height: 50, borderRadius: 8, marginRight: 16 },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#EF5B23",
+  },
   deleteButton: { marginLeft: 16 },
   deleteText: { color: "#EF5B23", fontWeight: "bold" },
   recipeItem: {
@@ -391,6 +548,10 @@ const styles = StyleSheet.create({
   },
   addIconButton: {
     marginLeft: 16,
+  },
+  recipeList: {
+    maxHeight: 350,
+    marginBottom: 16,
   },
 });
 

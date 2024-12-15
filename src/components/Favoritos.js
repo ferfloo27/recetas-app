@@ -105,38 +105,42 @@ const Favoritos = () => {
           No tienes recetas favoritas guardadas.
         </Text>
       ) : (
-        <FlatList
-          data={favoriteRecipes} // Las recetas favoritas ya filtradas
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.recipeItem}
-              onPress={() =>
-                navigation.navigate("Detalle de la Receta", {
-                  recipeId: item.id,
-                })
-              }
-            >
-              <Image
-                source={{ uri: item.image || "https://via.placeholder.com/80" }}
-                style={styles.recipeImage}
-              />
-
-              <Text style={styles.recipeTitle}>{item.title}</Text>
+        <View style={styles.recipeList}>
+          <FlatList
+            data={favoriteRecipes} // Las recetas favoritas ya filtradas
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
               <Pressable
-                onPress={() => toggleFavorite(item.id.toString())} // Elimina el favorito
+                style={styles.recipeItem}
+                onPress={() =>
+                  navigation.navigate("Detalle de la Receta", {
+                    recipeId: item.id,
+                  })
+                }
               >
-                <MaterialIcons
-                  name="favorite" // Corazón lleno
-                  size={24}
-                  color="#EF5B23" // Color del icono (puedes cambiarlo)
+                <Image
+                  source={{
+                    uri: item.image || "https://via.placeholder.com/80",
+                  }}
+                  style={styles.recipeImage}
                 />
+
+                <Text style={styles.recipeTitle}>{item.title}</Text>
+                <Pressable
+                  onPress={() => toggleFavorite(item.id.toString())} // Elimina el favorito
+                >
+                  <MaterialIcons
+                    name="favorite" // Corazón lleno
+                    size={24}
+                    color="#EF5B23" // Color del icono (puedes cambiarlo)
+                  />
+                </Pressable>
               </Pressable>
-            </Pressable>
-          )}
-          initialNumToRender={5}
-          windowSize={10}
-        />
+            )}
+            initialNumToRender={5}
+            windowSize={10}
+          />
+        </View>
       )}
 
       <BottomNav
@@ -180,6 +184,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     elevation: 3,
     padding: 10,
+  },
+  recipeList: {
+    maxHeight: "85%",
   },
   recipePressable: {
     flex: 1,
