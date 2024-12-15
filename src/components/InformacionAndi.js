@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import FormulaAndi from "./FormulaAndi";
 
 export default function InformacionAndi() {
   // Definimos los rangos y sus colores correspondientes
@@ -33,6 +34,7 @@ export default function InformacionAndi() {
         alimento y ajustando por el contenido calórico. Los valores pueden ir de
         1 a 1000, siendo 1000 el máximo posible.
       </Text>
+      <FormulaAndi />
 
       <Text style={styles.subtitle}>Rango de valores ANDI:</Text>
       <View style={styles.table}>
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#EF5B23",
-    marginTop: 10,
+
     marginBottom: 5,
   },
   text: {
