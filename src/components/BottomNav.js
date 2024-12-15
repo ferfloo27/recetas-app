@@ -39,19 +39,23 @@ export default function BottomNav({ navigation, activeScreen }) {
         />
         <Text style={styles.navText}>Menú</Text>
       </TouchableOpacity>
-      <TouchableOpacity
+      {/*<TouchableOpacity
         style={styles.navItem}
         onPress={() => navigation.navigate("CategoriesScreen")}
       >
         <FontAwesome name="cutlery" size={24} color="#FFFF" />
         <Text style={styles.navText}>Categorías</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
 
       <TouchableOpacity
         style={styles.navItem}
         onPress={() => navigation.navigate("ProfileView")}
       >
-        <FontAwesome name="user" size={24} color="#FFFF" />
+        <FontAwesome
+          name="user"
+          size={24}
+          color={activeScreen === "ProfileView" ? "#EF5B23" : "#FFFF"}
+        />
         <Text style={styles.navText}>Perfil</Text>
       </TouchableOpacity>
     </View>

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Button, Alert, Pressable } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import { FontAwesome } from "@expo/vector-icons";
+import BottomNav from "./BottomNav";
 // Ajusta la ruta según tu estructura
 
 const ProfileView = () => {
@@ -39,21 +40,32 @@ const ProfileView = () => {
 
   return (
     <View style={styles.container}>
-      <FontAwesome name="user-circle" size={100} color="#FF931E" />
-      <Text style={styles.title}>Perfil del Usuario</Text>
-      <Text style={styles.label}>Email:</Text>
-      <Text style={styles.email}>{user?.email || "No disponible"}</Text>
-      <View style={styles.button}>
-        <Pressable title="Cerrar sesión" onPress={handleLogout}>
-          <Text style={styles.buttonText}>Cerrar sesión</Text>
-        </Pressable>
+      <View style={styles.containerProfile}>
+        <FontAwesome name="user-circle" size={100} color="#FF931E" />
+        <Text style={styles.title}>Perfil del Usuario</Text>
+        <Text style={styles.label}>Email:</Text>
+        <Text style={styles.email}>{user?.email || "No disponible"}</Text>
+        <View style={styles.button}>
+          <Pressable title="Cerrar sesión" onPress={handleLogout}>
+            <Text style={styles.buttonText}>Cerrar sesión</Text>
+          </Pressable>
+        </View>
       </View>
+      <BottomNav
+        style={styles.bottomNav}
+        navigation={navigation}
+        activeScreen="ProfileView"
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  containerProfile: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -62,7 +74,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     width: "80%",
     marginVertical: 100,
-
     borderRadius: 10,
   },
   title: {

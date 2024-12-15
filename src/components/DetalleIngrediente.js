@@ -277,11 +277,13 @@ export default function DetalleIngrediente() {
 
           <View style={styles.container}>
             {/* Sección para mostrar el Valor ANDI */}
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={styles.sectionValorAndi}>
               <Text style={styles.sectionTitle}>Valor ANDI:</Text>
-              <Text style={{ fontSize: 17, marginLeft: 8, paddingTop: 9 }}>
-                {finalValue.toFixed(0)} {/* Formatear a 0 decimales */}
+              <Text style={styles.textAndi}>
+                {finalValue.toFixed(0)}
+                {/* Formatear a 0 decimales */}
               </Text>
+              <Text style={styles.textAndi2}>/1000</Text>
             </View>
 
             {/* Sección para mostrar la interpretación */}
@@ -393,13 +395,27 @@ const styles = StyleSheet.create({
     color: "#EF5B23",
     marginTop: 10,
   },
+  sectionValorAndi: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 8,
+  },
   text: {
     fontSize: 16,
     color: "black",
     marginBottom: 10,
   },
+  textAndi: {
+    fontSize: 30,
+    marginLeft: 8,
+    fontWeight: "bold",
+  },
+  textAndi2: {
+    fontSize: 20,
+    marginLeft: 8,
+  },
   loadingText: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: "center",
     marginTop: 20,
   },

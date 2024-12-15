@@ -26,9 +26,12 @@ const MenuScreen = () => {
 
   // Datos simulados para las comidas
   const meals = [
-    { id: "1", name: "Desayuno" },
-    { id: "2", name: "Almuerzo" },
-    { id: "3", name: "Cena" },
+    { id: "1", name: "Desayuno", periodo: "06:00 AM a 09:00 AM" },
+    { id: "2", name: "Colacion", periodo: "10:00 AM a 12:00 AM" },
+    { id: "3", name: "Almuerzo", periodo: "12:00 AM a 02:00 PM" },
+    { id: "4", name: "Merienda", periodo: "04:00 PM a 06:00 PM" },
+    { id: "5", name: "Cena", periodo: "07:00 PM a 09:00 PM" },
+    { id: "6", name: "Postre", periodo: "despues de la cena o almuerzo" },
   ];
 
   const getFormattedDateMenu = () => {
@@ -119,7 +122,7 @@ const MenuScreen = () => {
             <MaterialIcons name="restaurant" size={24} color="#EF5B23" />
             <View style={styles.mealDetails}>
               <Text style={styles.mealName}>{item.name}</Text>
-              <Text style={styles.addFoodText}>Añade comida</Text>
+              <Text style={styles.addFoodText}>{item.periodo}</Text>
             </View>
             <Pressable
               onPress={() => {

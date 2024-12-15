@@ -348,12 +348,22 @@ const AddRecet = () => {
       if (mealName === "Desayuno") {
         getRecipesByCategory("breakfast").then((recipes) => {
           setMealRecipes(recipes);
-          console.log("Recetas obtenidas:", recipes);
+          console.log("Recetas obtenidas:");
         });
       } else if (mealName === "Almuerzo" || mealName === "Cena") {
         getRecipesByCategory("main course").then((recipes) => {
           setMealRecipes(recipes);
-          console.log("Recetas obtenidas:", recipes);
+          console.log("Recetas obtenidas:");
+        });
+      } else if (mealName === "Merienda" || mealName === "Colacion") {
+        getRecipesByCategory("snack").then((recipes) => {
+          setMealRecipes(recipes);
+          console.log("Recetas obtenidas:");
+        });
+      } else if (mealName === "Postre") {
+        getRecipesByCategory("dessert").then((recipes) => {
+          setMealRecipes(recipes);
+          console.log("Recetas obtenidas:");
         });
       }
     }, [mealName])
