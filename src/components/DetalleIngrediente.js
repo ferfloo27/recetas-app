@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Pressable,
+} from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function DetalleIngrediente() {
   const route = useRoute();
   const { ingredienteId } = route.params; // Recibe el id del ingrediente como parámetro
+  const navigation = useNavigation();
   const [ingredient, setIngredient] = useState(null);
   const [selectedNutrients, setSelectedNutrients] = useState([]);
   const [tableNutrients, setTableNutrients] = useState([]);
 
   const [finalValue, setFinalValue] = useState(0);
 
-  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
+  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
 
   // Función para traducir texto usando Google Translate
@@ -279,17 +289,32 @@ export default function DetalleIngrediente() {
             {/* Sección para mostrar el Valor ANDI */}
             <View style={styles.sectionValorAndi}>
               <Text style={styles.sectionTitle}>Valor ANDI:</Text>
-              <Text style={styles.textAndi}>
-                {finalValue.toFixed(0)}
-                {/* Formatear a 0 decimales */}
-              </Text>
-              <Text style={styles.textAndi2}>/1000</Text>
+              <View style={styles.containerAndi}>
+                <Text style={styles.textAndi}>
+                  {finalValue.toFixed(0)}
+                  {/* Formatear a 0 decimales */}
+                </Text>
+                <Text style={styles.textAndi2}>/1000</Text>
+              </View>
             </View>
 
             {/* Sección para mostrar la interpretación */}
             <View style={{ marginTop: 8 }}>
               <Text style={styles.sectionTitle}>Interpretación:</Text>
               <Text style={styles.interpretationText}>{mensaje}</Text>
+              <Pressable onPress={() => navigation.navigate("InformacionAndi")}>
+                <View style={styles.containerInfo}>
+                  <Text style={styles.buttonTextRegister2}>
+                    mas información
+                  </Text>
+                  <FontAwesome
+                    name="info-circle"
+                    size={18}
+                    color="#EF5B23"
+                    onPress={() => navigation.navigate("InformacionAndi")}
+                  />
+                </View>
+              </Pressable>
             </View>
           </View>
 
@@ -339,6 +364,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FEF6F0",
+  },
+  buttonTextRegister2: {
+    color: "#EF5B23",
+    fontWeight: "bold",
+  },
+  containerInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   content: {
     padding: 16,
@@ -398,7 +432,13 @@ const styles = StyleSheet.create({
   sectionValorAndi: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  containerAndi: {
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 8,
+    marginEnd: 10,
   },
   text: {
     fontSize: 16,
@@ -407,7 +447,7 @@ const styles = StyleSheet.create({
   },
   textAndi: {
     fontSize: 30,
-    marginLeft: 8,
+    marginEnd: 10,
     fontWeight: "bold",
   },
   textAndi2: {

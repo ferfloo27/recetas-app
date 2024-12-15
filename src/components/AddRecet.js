@@ -12,6 +12,7 @@ import {
   Image,
   Pressable,
   StyleSheet,
+  ScrollView,
   Alert,
 } from "react-native";
 import { db, auth } from "../../firebase-config"; // Importa tu configuración de Firebase
@@ -53,7 +54,7 @@ const AddRecet = () => {
   const [error, setError] = useState(null);
   const [mealRecipes, setMealRecipes] = useState([]);
 
-  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
+  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
 
   // Función para traducir texto usando Google Translate
@@ -370,7 +371,7 @@ const AddRecet = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>{mealName}</Text>
       {favoriteRecipes.length === 0 ? (
         <Text style={styles.noFavoritesText}>
@@ -483,7 +484,7 @@ const AddRecet = () => {
           </View>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -560,7 +561,6 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   recipeList: {
-    maxHeight: 350,
     marginBottom: 16,
   },
 });

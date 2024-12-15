@@ -16,6 +16,7 @@ import AddRecet from "./src/components/AddRecet";
 const Stack = createStackNavigator();
 import Register from "./src/components/Register";
 import BuscadorPorCategoria from "./src/components/BuscadorPorCategoria";
+import InformacionAndi from "./src/components/InformacionAndi";
 
 export default function App() {
   return (
@@ -163,6 +164,17 @@ export default function App() {
           component={MealDetail}
           options={{
             title: "Detalle del Menu",
+            headerStyle: { backgroundColor: "#FF931E" },
+            headerTintColor: "#fff",
+            headerTitleStyle: { fontWeight: "bold" },
+          }}
+        />
+
+        <Stack.Screen
+          name="InformacionAndi"
+          component={InformacionAndi}
+          options={{
+            title: "Valores ANDI",
             headerStyle: { backgroundColor: "#FF931E" },
             headerTintColor: "#fff",
             headerTitleStyle: { fontWeight: "bold" },
