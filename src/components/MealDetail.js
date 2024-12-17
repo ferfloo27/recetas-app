@@ -89,26 +89,6 @@ const MealDetail = ({ route }) => {
     <View style={styles.container}>
       <Text style={styles.title}>{mealName}</Text>
 
-      {
-        // Listado de recetas
-        /*<FlatList
-        data={recipes}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.recipeCard}>
-            <Image source={{ uri: item.imageUrl }} style={styles.image} />
-            <Text style={styles.recipeName}>{item.recipeName}</Text>
-            <Pressable
-              style={styles.deleteButton}
-              onPress={() => deleteRecipe(index)}
-            >
-              <Text style={styles.deleteText}>Eliminar</Text>
-            </Pressable>
-          </View>
-        )}
-      />*/
-      }
-
       {recipes.length === 0 ? (
         <Text style={styles.noRecipesText}>No hay recetas añadidas aún.</Text>
       ) : (
@@ -160,20 +140,20 @@ const styles = StyleSheet.create({
   recipeName: { flex: 1, fontSize: 16 },
   image: { width: 50, height: 50, borderRadius: 8, marginRight: 16 },
   addButton: {
-    position: "absolute", // Posicionamiento absoluto
-    bottom: 20, // Distancia desde el borde inferior
-    right: 20, // Distancia desde el borde derecho
-    backgroundColor: "#ff5c5c", // Color del botón
-    width: 60, // Ancho
-    height: 60, // Alto
-    borderRadius: 30, // Hacerlo circular
-    justifyContent: "center", // Centrar contenido
-    alignItems: "center", // Centrar contenido
-    shadowColor: "#000", // Sombra
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#ff5c5c",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 5, // Sombra en Android
+    elevation: 5,
   },
   addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 40 },
   deleteButton: { marginLeft: 16 },

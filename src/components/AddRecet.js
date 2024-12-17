@@ -311,7 +311,7 @@ const AddRecet = () => {
     useCallback(() => {
       const getRecipesByCategory = async (category) => {
         const randomOffset = Math.floor(Math.random() * 450);
-        const url = `https://api.spoonacular.com/recipes/complexSearch?type=${category}&number=2&offset=${randomOffset}&apiKey=${API_KEY}`;
+        const url = `https://api.spoonacular.com/recipes/complexSearch?type=${category}&number=5&offset=${randomOffset}&apiKey=${API_KEY}`;
 
         try {
           const response = await fetch(url);

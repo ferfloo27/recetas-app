@@ -46,8 +46,9 @@ const BuscadorPorCategoria = () => {
   const [recipes, setRecipes] = useState([]);
 
   const API_KEY_GOOGLE = "AIzaSyAauh--gJeN_HHVKY2mW_AF7b89JdQ2LOk";
-  const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
-
+  //const API_KEY = "8bd09a6a0ec64444b1240f14e038989d";
+  //const API_KEY = "a0b302c65fee4b93a470fd535ced1281";
+  const API_KEY = "726d82e66425488aac3d9c5d5bea656a";
   // Función para traducir texto usando Google Translate
   const translateText = async (text, sourceLang, targetLang) => {
     try {
@@ -86,7 +87,7 @@ const BuscadorPorCategoria = () => {
     try {
       const traslatedQuery = await translateText(searchQuery, "es", "en");
       const response = await axios.get(
-        `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&query=${traslatedQuery}&number=3`
+        `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&query=${traslatedQuery}&number=10`
       );
 
       const recetas = response.data.results;
