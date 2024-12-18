@@ -22,6 +22,9 @@ import Register from "./src/components/Register";
 import BuscadorPorCategoria from "./src/components/BuscadorPorCategoria";
 import InformacionAndi from "./src/components/InformacionAndi";
 
+import { LogBox } from "react-native";
+LogBox.ignoreAllLogs();
+
 export default function App() {
   return (
     <NavigationContainer>

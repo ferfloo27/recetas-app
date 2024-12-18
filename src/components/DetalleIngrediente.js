@@ -126,7 +126,7 @@ export default function DetalleIngrediente() {
         );
 
         // Aplicar las condiciones finales para el resultado
-        let finalResult = (valorTotal * 1000.0) / 1250.0;
+        let finalResult = (valorTotal * 1000.0) / 1300.0;
         finalResult = Math.max(0, Math.min(finalResult, 1000.0));
 
         setSelectedNutrients(nutrientesConTraducciones);
@@ -305,7 +305,7 @@ export default function DetalleIngrediente() {
               <Pressable onPress={() => navigation.navigate("InformacionAndi")}>
                 <View style={styles.containerInfo}>
                   <Text style={styles.buttonTextRegister2}>
-                    mas información
+                    Más información
                   </Text>
                   <FontAwesome
                     name="info-circle"
